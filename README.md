@@ -1,71 +1,98 @@
-# repomix-extension README
+# Repomix Controller
 
-This is the README for your extension "repomix-extension". After writing up a brief description, we recommend including the following sections.
+Repomix Controller は、repomix CLI ツールのための VSCode 拡張機能です。ファイル選択状態の管理、プロファイルによる選択状態の保存/読み込み、そして選択されたファイルに対する repomix コマンドの実行を視覚的に行うことができます。
 
-## Features
+## 主な機能
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### ファイルツリービュー
+- ワークスペース内のファイルをツリー形式で表示
+- チェックボックス付きのファイル選択インターフェース
+- ディレクトリの再帰的選択をサポート
 
-For example if there is an image subfolder under your extension project workspace:
+### プロファイル管理
+- 選択したファイルの状態をプロファイルとして保存
+- 保存したプロファイルの読み込み
+- プロファイルの削除と管理
 
-\!\[feature X\]\(images/feature-x.png\)
+### repomix 実行
+- 選択したファイルリストに対して repomix を実行
+- 実行結果をマークダウンエディタで表示
+- 実行オプションの柔軟な設定
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## 必要条件
 
-## Requirements
+- Visual Studio Code 1.100.0 以上
+- Node.js 16.x 以上（開発時のみ）
+- TypeScript 5.8.0 以上（開発時のみ）
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+## 拡張機能の設定
 
-## Extension Settings
+この拡張機能は以下の設定項目を提供します：
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+* `repomix-extension.autoSaveProfiles`: プロファイルの自動保存を有効/無効にします
+* `repomix-extension.defaultProfileName`: 新規プロファイル作成時のデフォルト名接頭辞
+* `repomix-extension.showConfirmationDialogs`: 確認ダイアログの表示/非表示を設定
 
-For example:
+## 使い方
 
-This extension contributes the following settings:
+### ファイル選択
+1. VSCode のアクティビティバーから Repomix Controller アイコンをクリック
+2. ファイルツリービューで選択したいファイルをクリックしてチェックを入れる
+3. ディレクトリを選択すると、そのディレクトリ内のすべてのファイルが選択される
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+### プロファイル管理
+1. ファイル選択後、コマンドパレット(`Ctrl+Shift+P`)から「Repomix: プロファイルを保存」を選択
+2. プロファイル名を入力して保存
+3. 保存したプロファイルは「プロファイル管理」ビューに表示
+4. プロファイルをクリックすると読み込み、右クリックで削除も可能
 
-## Known Issues
+### repomix の実行
+1. ファイル選択後、ファイルツリービュー上部の実行ボタン(▶)をクリック
+2. または、コマンドパレットから「Repomix: 実行」を選択
+3. 実行結果が新しいエディタタブに表示される
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+## 既知の問題
 
-## Release Notes
+* 非常に大きなディレクトリ構造でのパフォーマンス低下
+* 一部特殊文字を含むファイル名での選択状態の問題
 
-Users appreciate release notes as you update your extension.
+## リリースノート
 
-### 1.0.0
+### 0.1.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
+初回リリース
+* ファイルツリービュー
+* チェックボックス付きファイル選択
+* プロファイル管理（保存/読み込み/削除）
+* repomix 実行機能（モック実装）
 
 ---
 
-## Following extension guidelines
+## 開発情報
 
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
+### 技術スタック
+* TypeScript
+* React
+* VSCode Extension API
+* Mocha, Chai, Sinon（テスト）
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+### アーキテクチャ
+* `extension.ts`: 拡張機能のエントリーポイント
+* `fileTree.ts`: ファイルシステムをツリービューで表示する機能
+* `profileManager.ts`: プロファイル管理機能
+* `repomixRunner.ts`: repomixコマンド実行機能
 
-## Working with Markdown
+### テスト
+* `npm test` コマンドでユニットテストを実行
+* VSCode Extension Testing APIを使用した統合テスト
 
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
+## 詳細情報
 
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
+* [VSCode 拡張機能開発ドキュメント](https://code.visualstudio.com/api)
+* [GitHub リポジトリ](https://github.com/yourusername/repomix-extension)
 
-## For more information
+## ライセンス
 
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
+MIT
 
-**Enjoy!**
+**Repomix Controller をお楽しみください！**

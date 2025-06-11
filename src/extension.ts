@@ -16,6 +16,8 @@ interface Profile {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  console.log('🔥 Repomix Extension activated!');
+  
   // 作業ディレクトリを取得
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath || '';
   

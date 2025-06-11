@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
+import { promisify } from 'util';
 
 /**
  * ファイルシステムエントリを表す型
@@ -25,9 +27,18 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   private checkedItems = new Map<string, boolean>();
 
   private workspaceRoot: string;
+  
+  // アイコンパス
+  private readonly checkedIconPath: vscode.Uri;
+  private readonly uncheckedIconPath: vscode.Uri;
 
   constructor(workspaceRoot: string) {
     this.workspaceRoot = workspaceRoot;
+    
+    // アイコンファイルのURIを作成
+    const extensionPath = vscode.extensions.getExtension('repomix-extension')?.extensionUri.fsPath || __dirname;
+    this.checkedIconPath = vscode.Uri.file(path.join(extensionPath, 'resources', 'checked.svg'));
+    this.uncheckedIconPath = vscode.Uri.file(path.join(extensionPath, 'resources', 'unchecked.svg'));
   }
   
   /**
@@ -201,6 +212,34 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
    * TreeItemを生成する
    */
   getTreeItem(element: FileSystemItem): vscode.TreeItem {
+    class FileTreeItem extends vscode.TreeItem {
+      constructor(
+        public readonly uri: vscode.Uri,
+        public readonly checked: boolean,
+        public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+        private readonly checkedIconPath: vscode.Uri,
+        private readonly uncheckedIconPath: vscode.Uri,
+        public readonly command?: vscode.Command
+      ) {
+        super(uri, collapsibleState);
+
+        // ツリーアイテムのラベルを設定
+        this.label = path.basename(uri.fsPath);
+
+        // チェック状態をツールチップに表示
+        this.tooltip = `${this.label} ${checked ? '(選択済み)' : ''}`;
+
+        // アイコンの設定
+        this.iconPath = checked ? this.checkedIconPath : this.uncheckedIconPath;
+        
+        // コンテキストバリューにチェック状態を追加
+        this.contextValue = checked ? 'checkedFileTreeItem' : 'uncheckedFileTreeItem';
+      }
+
+      // 基本コンテキスト値は fileTreeItem
+      contextValue = 'fileTreeItem';
+    }
+
     const isDirectory = element.type === vscode.FileType.Directory;
     const isChecked = element.contextValue === 'checked';
     
@@ -208,27 +247,20 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     const fileName = path.basename(element.resourceUri.fsPath);
     
     // TreeItemを生成
-    const treeItem = new vscode.TreeItem(
-      fileName,
+    const treeItem = new FileTreeItem(
+      element.resourceUri,
+      isChecked,
       isDirectory 
         ? vscode.TreeItemCollapsibleState.Collapsed 
-        : vscode.TreeItemCollapsibleState.None
+        : vscode.TreeItemCollapsibleState.None,
+      this.checkedIconPath,
+      this.uncheckedIconPath,
+      {
+        command: 'repomix-extension.toggleChecked',
+        title: 'Toggle Checked',
+        arguments: [element]
+      }
     );
-    
-    // アイコンの設定
-    treeItem.iconPath = isDirectory 
-      ? (isChecked ? new vscode.ThemeIcon('folder-active') : new vscode.ThemeIcon('folder')) 
-      : (isChecked ? new vscode.ThemeIcon('check') : new vscode.ThemeIcon('file'));
-    
-    // コンテキスト値の設定
-    treeItem.contextValue = isChecked ? 'checked' : 'unchecked';
-    
-    // コマンドの設定
-    treeItem.command = {
-      command: 'repomix-extension.toggleChecked',
-      title: 'Toggle Checked',
-      arguments: [element]
-    };
     
     return treeItem;
   }
