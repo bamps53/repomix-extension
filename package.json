@@ -1,0 +1,153 @@
+{
+  "name": "repomix-extension",
+  "displayName": "Repomix Controller",
+  "description": "VSCode拡張機能でRepomix CLIをGUIから直感的に操作",
+  "version": "0.0.1",
+  "publisher": "daisuke",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "repomix-controller",
+          "title": "Repomix",
+          "icon": "resources/repomix-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "repomix-controller": [
+        {
+          "id": "repomixFileExplorer",
+          "name": "ファイルツリー"
+        },
+        {
+          "id": "repomixProfiles",
+          "name": "プロファイル管理"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "repomix-extension.refresh",
+        "title": "更新",
+        "icon": "$(refresh)",
+        "category": "Repomix"
+      },
+      {
+        "command": "repomix-extension.toggleChecked",
+        "title": "選択切り替え",
+        "category": "Repomix"
+      },
+      {
+        "command": "repomix-extension.saveProfile",
+        "title": "プロファイル保存",
+        "icon": "$(add)",
+        "category": "Repomix"
+      },
+      {
+        "command": "repomix-extension.loadProfile",
+        "title": "プロファイル読み込み",
+        "icon": "$(folder-opened)",
+        "category": "Repomix"
+      },
+      {
+        "command": "repomix-extension.deleteProfile",
+        "title": "プロファイル削除",
+        "icon": "$(trash)",
+        "category": "Repomix"
+      },
+      {
+        "command": "repomix-extension.executeRepomix",
+        "title": "Repomix実行",
+        "icon": "$(play)",
+        "category": "Repomix"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "repomix-extension.refresh",
+          "when": "view == repomixFileExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "repomix-extension.executeRepomix",
+          "when": "view == repomixFileExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "repomix-extension.saveProfile",
+          "when": "view == repomixProfiles",
+          "group": "navigation"
+        },
+        {
+          "command": "repomix-extension.loadProfile",
+          "when": "view == repomixProfiles",
+          "group": "navigation"
+        },
+        {
+          "command": "repomix-extension.deleteProfile",
+          "when": "view == repomixProfiles",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "repomix-extension.toggleChecked",
+          "when": "view == repomixFileExplorer",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "test:mocha": "mocha --config ./mocha.json",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "lint:fix": "eslint src --ext ts,tsx --fix"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/sinon": "^10.0.15",
+    "@types/vscode": "^1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.1",
+    "@typescript-eslint/parser": "^8.31.1",
+    "chai": "^4.3.7",
+    "eslint": "^9.25.1",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.2",
+    "mocha": "^10.2.0",
+    "prettier": "^2.8.8",
+    "sinon": "^15.1.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.7",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
