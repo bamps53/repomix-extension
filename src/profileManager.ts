@@ -80,6 +80,35 @@ export class ProfileManager implements vscode.TreeDataProvider<ProfileItem> {
   }
 
   /**
+   * プロファイルをリネームする
+   * @param oldName 現在のプロファイル名
+   * @param newName 新しいプロファイル名
+   * @returns リネームに成功した場合はtrue
+   */
+  renameProfile(oldName: string, newName: string): boolean {
+    const profiles = this.getProfiles();
+    const profileIndex = profiles.findIndex((profile) => profile.name === oldName);
+    
+    if (profileIndex === -1) {
+      return false; // Profile not found
+    }
+    
+    // Check if new name already exists
+    const nameExists = profiles.some((profile) => profile.name === newName);
+    if (nameExists && newName !== oldName) {
+      return false; // Name already exists
+    }
+    
+    // Update the profile name
+    profiles[profileIndex].name = newName;
+    profiles[profileIndex].createdAt = Date.now(); // Update timestamp
+    
+    this.context.workspaceState.update('repomix.profiles', profiles);
+    this._onDidChangeTreeData.fire();
+    return true;
+  }
+
+  /**
    * 保存されているプロファイルの一覧を取得する
    */
   getProfiles(): Profile[] {

@@ -19,7 +19,10 @@ suite('Error Handling Test Suite', () => {
     let fileTreeProvider: FileTreeProvider;
 
     setup(() => {
-      fileTreeProvider = new FileTreeProvider('/test/workspace');
+      const mockContext = {
+        extensionUri: vscode.Uri.file('/mock/extension/path')
+      } as vscode.ExtensionContext;
+      fileTreeProvider = new FileTreeProvider('/test/workspace', mockContext);
     });
 
     test('should handle file system error scenarios', () => {
@@ -85,7 +88,10 @@ suite('Error Handling Test Suite', () => {
 
   suite('Memory Management', () => {
     test('should handle large file lists without memory issues', () => {
-      const fileTreeProvider = new FileTreeProvider('/test/workspace');
+      const mockContext = {
+        extensionUri: vscode.Uri.file('/mock/extension/path')
+      } as vscode.ExtensionContext;
+      const fileTreeProvider = new FileTreeProvider('/test/workspace', mockContext);
       
       // 1000個のファイルパスを生成
       const largePaths: string[] = [];

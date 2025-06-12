@@ -19,7 +19,10 @@ suite('FileTreeProvider Tests', () => {
 
   setup(() => {
     sandbox = sinon.createSandbox();
-    fileTreeProvider = new FileTreeProvider(mockWorkspaceRoot);
+    const mockContext = {
+      extensionUri: vscode.Uri.file('/mock/extension/path')
+    } as vscode.ExtensionContext;
+    fileTreeProvider = new FileTreeProvider(mockWorkspaceRoot, mockContext);
   });
 
   teardown(() => {

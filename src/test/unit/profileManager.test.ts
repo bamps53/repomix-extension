@@ -154,4 +154,66 @@ suite('ProfileManager Test Suite', () => {
     assert.strictEqual(profileItem.contextValue, 'profile');
     assert.ok(profileItem.iconPath instanceof vscode.ThemeIcon);
   });
+
+  test('renameProfile should rename existing profile successfully', () => {
+    const now = Date.now();
+    const clock = sinon.useFakeTimers(now);
+    
+    try {
+      const result = profileManager.renameProfile('Profile1', 'RenamedProfile');
+      
+      assert.strictEqual(result, true, 'Rename should succeed');
+      
+      const expectedProfiles = [
+        { name: 'RenamedProfile', paths: ['/path1', '/path2'], createdAt: now },
+        mockProfiles[1]
+      ];
+      
+      sinon.assert.calledWithExactly(
+        mockWorkspaceState.update,
+        'repomix.profiles',
+        expectedProfiles
+      );
+    } finally {
+      clock.restore();
+    }
+  });
+
+  test('renameProfile should return false for non-existent profile', () => {
+    const result = profileManager.renameProfile('NonExistentProfile', 'NewName');
+    
+    assert.strictEqual(result, false, 'Rename should fail for non-existent profile');
+    sinon.assert.notCalled(mockWorkspaceState.update);
+  });
+
+  test('renameProfile should return false if new name already exists', () => {
+    const result = profileManager.renameProfile('Profile1', 'Profile2');
+    
+    assert.strictEqual(result, false, 'Rename should fail if new name already exists');
+    sinon.assert.notCalled(mockWorkspaceState.update);
+  });
+
+  test('renameProfile should allow renaming to the same name', () => {
+    const now = Date.now();
+    const clock = sinon.useFakeTimers(now);
+    
+    try {
+      const result = profileManager.renameProfile('Profile1', 'Profile1');
+      
+      assert.strictEqual(result, true, 'Rename to same name should succeed');
+      
+      const expectedProfiles = [
+        { name: 'Profile1', paths: ['/path1', '/path2'], createdAt: now },
+        mockProfiles[1]
+      ];
+      
+      sinon.assert.calledWithExactly(
+        mockWorkspaceState.update,
+        'repomix.profiles',
+        expectedProfiles
+      );
+    } finally {
+      clock.restore();
+    }
+  });
 });
