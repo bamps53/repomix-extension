@@ -1,14 +1,35 @@
 {
   "name": "repomix-extension",
   "displayName": "Repomix Controller",
-  "description": "VSCode拡張機能でRepomix CLIをGUIから直感的に操作",
-  "version": "0.0.1",
+  "description": "VSCode extension to intuitively operate Repomix CLI from GUI / VSCode拡張機能でRepomix CLIをGUIから直感的に操作",
+  "version": "0.0.2",
   "publisher": "daisuke",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bamps53/repomix-extension.git"
+  },
+  "homepage": "https://github.com/bamps53/repomix-extension#readme",
+  "bugs": {
+    "url": "https://github.com/bamps53/repomix-extension/issues"
+  },
+  "keywords": [
+    "repomix",
+    "code-generation",
+    "file-tree",
+    "repository",
+    "cli-tool",
+    "developer-tools",
+    "productivity",
+    "profile-management"
+  ],
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Developer Tools",
+    "Productivity"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
@@ -26,7 +47,13 @@
       "repomix-controller": [
         {
           "id": "repomixFileExplorer",
-          "name": "File Tree"
+          "name": "File Tree",
+          "visibility": "visible"
+        },
+        {
+          "id": "repomixProfiles",
+          "name": "Profiles",
+          "visibility": "collapsed"
         }
       ]
     },
@@ -38,25 +65,33 @@
         "category": "Repomix"
       },
       {
+        "command": "repomix-extension.selectAll",
+        "title": "Select All",
+        "icon": "$(check-all)",
+        "category": "Repomix"
+      },
+      {
         "command": "repomix-extension.saveProfile",
         "title": "Save Profile",
         "icon": "$(add)",
         "category": "Repomix"
       },
       {
-        "command": "repomix-extension.manageProfiles",
-        "title": "Manage Profiles",
-        "icon": "$(bookmark)",
-        "category": "Repomix"
-      },
-      {
         "command": "repomix-extension.loadProfile",
         "title": "Load Profile",
+        "icon": "$(folder-opened)",
         "category": "Repomix"
       },
       {
         "command": "repomix-extension.deleteProfile",
         "title": "Delete Profile",
+        "icon": "$(trash)",
+        "category": "Repomix"
+      },
+      {
+        "command": "repomix-extension.renameProfile",
+        "title": "Rename Profile",
+        "icon": "$(edit)",
         "category": "Repomix"
       },
       {
@@ -79,7 +114,7 @@
           "group": "navigation@2"
         },
         {
-          "command": "repomix-extension.manageProfiles",
+          "command": "repomix-extension.selectAll",
           "when": "view == repomixFileExplorer",
           "group": "navigation@3"
         },
@@ -89,7 +124,23 @@
           "group": "navigation@4"
         }
       ],
-      "view/item/context": []
+      "view/item/context": [
+        {
+          "command": "repomix-extension.loadProfile",
+          "when": "view == repomixProfiles && viewItem == profile",
+          "group": "inline@1"
+        },
+        {
+          "command": "repomix-extension.renameProfile",
+          "when": "view == repomixProfiles && viewItem == profile",
+          "group": "inline@2"
+        },
+        {
+          "command": "repomix-extension.deleteProfile",
+          "when": "view == repomixProfiles && viewItem == profile",
+          "group": "inline@3"
+        }
+      ]
     }
   },
   "scripts": {
@@ -114,9 +165,11 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/sinon": "^10.0.15",
-    "@types/vscode": "^1.100.0",
+    "@types/vscode": "^1.74.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2",
     "chai": "^4.3.7",
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^8.8.0",
@@ -130,9 +183,7 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.8.3",
     "webpack": "^5.99.7",
-    "webpack-cli": "^6.0.1",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.5.2"
+    "webpack-cli": "^6.0.1"
   },
   "dependencies": {
     "react": "^18.2.0",

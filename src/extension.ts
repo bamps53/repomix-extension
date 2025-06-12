@@ -22,13 +22,16 @@ export function activate(context: vscode.ExtensionContext) {
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath || '';
   
   // FileTreeProviderのインスタンスを作成
-  const fileTreeProvider = new FileTreeProvider(workspaceRoot);
+  const fileTreeProvider = new FileTreeProvider(workspaceRoot, context);
   
   // ProfileManagerのインスタンスを作成
   const profileManager = new ProfileManager(context);
   
   // ファイルツリービューの登録
   vscode.window.registerTreeDataProvider('repomixFileExplorer', fileTreeProvider);
+  
+  // プロファイル管理ビューの登録
+  vscode.window.registerTreeDataProvider('repomixProfiles', profileManager);
 
   // トグルコマンドを登録
   context.subscriptions.push(
@@ -41,7 +44,15 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.refresh', () => {
       fileTreeProvider.refresh();
-      vscode.window.showInformationMessage('Repomix: File tree refreshed');
+      vscode.window.showInformationMessage('File tree refreshed and all selections cleared');
+    })
+  );
+
+  // Select Allコマンドを登録
+  context.subscriptions.push(
+    vscode.commands.registerCommand('repomix-extension.selectAll', async () => {
+      await fileTreeProvider.selectAll();
+      vscode.window.showInformationMessage('All files and folders selected');
     })
   );
 
@@ -65,69 +76,6 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // プロファイル管理コマンドの登録
-  context.subscriptions.push(
-    vscode.commands.registerCommand('repomix-extension.manageProfiles', async () => {
-      const profiles = profileManager.getProfiles();
-      
-      if (profiles.length === 0) {
-        vscode.window.showInformationMessage('No saved profiles found.');
-        return;
-      }
-      
-      // プロファイル選択肢を作成（Load と Delete オプション付き）
-      const profileItems = profiles.flatMap(profile => [
-        {
-          label: `$(folder-opened) Load: ${profile.name}`,
-          description: `${profile.paths.length} files - ${new Date(profile.createdAt).toLocaleString()}`,
-          action: 'load',
-          profile: profile
-        },
-        {
-          label: `$(trash) Delete: ${profile.name}`,
-          description: `${profile.paths.length} files - ${new Date(profile.createdAt).toLocaleString()}`,
-          action: 'delete',
-          profile: profile
-        }
-      ]);
-      
-      const selectedItem = await vscode.window.showQuickPick(profileItems, {
-        title: 'Manage Profiles',
-        placeHolder: 'Select an action for a profile...',
-      });
-      
-      if (selectedItem) {
-        if (selectedItem.action === 'load') {
-          // ファイルツリーの選択状態をリセット
-          fileTreeProvider.uncheckAll();
-          
-          // 保存されていたパスを選択状態に設定
-          for (const path of selectedItem.profile.paths) {
-            fileTreeProvider.setChecked(path, true, false);
-          }
-          
-          // ツリービューを更新
-          fileTreeProvider.refresh();
-          
-          vscode.window.showInformationMessage(`Profile "${selectedItem.profile.name}" loaded successfully.`);
-        } else if (selectedItem.action === 'delete') {
-          // 確認ダイアログを表示
-          const confirmed = await vscode.window.showWarningMessage(
-            `Delete profile "${selectedItem.profile.name}"?`, 
-            { modal: true },
-            'Delete'
-          );
-          
-          if (confirmed === 'Delete') {
-            const deleted = profileManager.deleteProfile(selectedItem.profile.name);
-            if (deleted) {
-              vscode.window.showInformationMessage(`Profile "${selectedItem.profile.name}" deleted successfully.`);
-            }
-          }
-        }
-      }
-    })
-  );
 
   // プロファイル読み込みコマンドの登録（従来のコマンド維持）
   context.subscriptions.push(
@@ -175,10 +123,77 @@ export function activate(context: vscode.ExtensionContext) {
             fileTreeProvider.setChecked(path, true, false);
           }
           
-          // ツリービューを更新
-          fileTreeProvider.refresh();
+          // ツリービューを更新（選択状態をクリアしない）
+          fileTreeProvider.updateView();
           
           vscode.window.showInformationMessage(`Profile "${profileName}" loaded successfully.`);
+        }
+      }
+    })
+  );
+
+  // プロファイルリネームコマンドの登録
+  context.subscriptions.push(
+    vscode.commands.registerCommand('repomix-extension.renameProfile', async (profileItem?: any) => {
+      let profileName: string | undefined;
+      
+      // TreeViewからの呼び出しかどうかを判定
+      if (profileItem && profileItem.profile && profileItem.profile.name) {
+        profileName = profileItem.profile.name;
+      } else {
+        // 保存されているプロファイル一覧を取得
+        const profiles = profileManager.getProfiles();
+        
+        if (profiles.length === 0) {
+          vscode.window.showInformationMessage('No saved profiles found.');
+          return;
+        }
+        
+        // リネームするプロファイルを選択
+        const selectedProfileItem = await vscode.window.showQuickPick(
+          profiles.map(p => ({ 
+            label: p.name,
+            detail: `${p.paths.length} files - ${new Date(p.createdAt).toLocaleString()}`,
+            profile: p
+          })),
+          {
+            title: 'Select profile to rename',
+            placeHolder: 'Select a profile...',
+          }
+        );
+        
+        profileName = selectedProfileItem?.profile.name;
+      }
+      
+      if (profileName) {
+        // 新しい名前を入力
+        const newName = await vscode.window.showInputBox({
+          title: 'Rename Profile',
+          placeHolder: 'Enter new profile name',
+          value: profileName,
+          validateInput: (value) => {
+            if (!value || value.trim().length === 0) {
+              return 'Profile name cannot be empty';
+            }
+            if (value === profileName) {
+              return null; // Same name is OK
+            }
+            const profiles = profileManager.getProfiles();
+            if (profiles.some(p => p.name === value)) {
+              return 'Profile name already exists';
+            }
+            return null;
+          }
+        });
+        
+        if (newName && newName !== profileName) {
+          const renamed = profileManager.renameProfile(profileName, newName);
+          
+          if (renamed) {
+            vscode.window.showInformationMessage(`Profile renamed from "${profileName}" to "${newName}".`);
+          } else {
+            vscode.window.showErrorMessage('Failed to rename profile.');
+          }
         }
       }
     })

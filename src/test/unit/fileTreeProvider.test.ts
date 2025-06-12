@@ -12,7 +12,10 @@ suite('FileTreeProvider Advanced Tests', () => {
 
   setup(() => {
     sandbox = sinon.createSandbox();
-    fileTreeProvider = new FileTreeProvider(mockWorkspaceRoot);
+    const mockContext = {
+      extensionUri: vscode.Uri.file('/mock/extension/path')
+    } as vscode.ExtensionContext;
+    fileTreeProvider = new FileTreeProvider(mockWorkspaceRoot, mockContext);
   });
 
   teardown(() => {
@@ -48,7 +51,81 @@ suite('FileTreeProvider Advanced Tests', () => {
     test('should handle empty children arrays correctly', async () => {
       // getChildrenが空配列を返すケースのテスト（実際のファイルシステムに依存しない）
       const emptyChildren = await fileTreeProvider.getChildren();
+      
+      // 空配列または実際の子要素数を確認（ファイルシステムに依存）
       assert.ok(Array.isArray(emptyChildren));
+    });
+
+    test('setChecked should properly set and maintain check state', () => {
+      const testPath = '/test/workspace/test-file.txt';
+      
+      // チェック状態を設定（イベント発火なし）
+      fileTreeProvider.setChecked(testPath, true, false);
+      
+      // チェック状態を確認
+      const checkedItems = fileTreeProvider.getCheckedItems();
+      assert.ok(checkedItems.includes(testPath), 'File should be in checked items list');
+      
+      // チェック状態を解除
+      fileTreeProvider.setChecked(testPath, false, false);
+      
+      // チェック状態を再確認
+      const uncheckedItems = fileTreeProvider.getCheckedItems();
+      assert.ok(!uncheckedItems.includes(testPath), 'File should not be in checked items list');
+    });
+
+    test('uncheckAll should clear all checked items', () => {
+      // 複数のファイルをチェック
+      fileTreeProvider.setChecked('/test/file1.txt', true, false);
+      fileTreeProvider.setChecked('/test/file2.txt', true, false);
+      fileTreeProvider.setChecked('/test/file3.txt', true, false);
+      
+      // チェック状態を確認
+      let checkedItems = fileTreeProvider.getCheckedItems();
+      assert.strictEqual(checkedItems.length, 3, 'Should have 3 checked items');
+      
+      // 全てクリア
+      fileTreeProvider.uncheckAll();
+      
+      // チェック状態を再確認
+      checkedItems = fileTreeProvider.getCheckedItems();
+      assert.strictEqual(checkedItems.length, 0, 'Should have no checked items after uncheckAll');
+    });
+
+    test('updateView should not affect checked state', () => {
+      // ファイルをチェック
+      fileTreeProvider.setChecked('/test/file1.txt', true, false);
+      fileTreeProvider.setChecked('/test/file2.txt', true, false);
+      
+      // チェック状態を確認
+      let checkedItems = fileTreeProvider.getCheckedItems();
+      assert.strictEqual(checkedItems.length, 2, 'Should have 2 checked items');
+      
+      // updateViewを呼び出し
+      fileTreeProvider.updateView();
+      
+      // チェック状態が維持されていることを確認
+      checkedItems = fileTreeProvider.getCheckedItems();
+      assert.strictEqual(checkedItems.length, 2, 'Should still have 2 checked items after updateView');
+      assert.ok(checkedItems.includes('/test/file1.txt'), 'file1.txt should still be checked');
+      assert.ok(checkedItems.includes('/test/file2.txt'), 'file2.txt should still be checked');
+    });
+
+    test('refresh should clear all checked items (different from updateView)', () => {
+      // ファイルをチェック
+      fileTreeProvider.setChecked('/test/file1.txt', true, false);
+      fileTreeProvider.setChecked('/test/file2.txt', true, false);
+      
+      // チェック状態を確認
+      let checkedItems = fileTreeProvider.getCheckedItems();
+      assert.strictEqual(checkedItems.length, 2, 'Should have 2 checked items');
+      
+      // refreshを呼び出し
+      fileTreeProvider.refresh();
+      
+      // チェック状態がクリアされていることを確認
+      checkedItems = fileTreeProvider.getCheckedItems();
+      assert.strictEqual(checkedItems.length, 0, 'Should have no checked items after refresh');
     });
   });
 
@@ -229,6 +306,44 @@ suite('FileTreeProvider Advanced Tests', () => {
         const checkedItems = fileTreeProvider.getCheckedItems();
         assert.ok(checkedItems.includes(deepPath));
       });
+    });
+  });
+
+  suite('Select All Functionality', () => {
+    test('selectAll should exist as a method', () => {
+      // selectAllメソッドが存在することを確認
+      assert.ok(typeof fileTreeProvider.selectAll === 'function');
+    });
+
+    test('selectAll should not throw errors', async () => {
+      // selectAllを呼び出してもエラーが発生しないことを確認
+      await assert.doesNotReject(async () => {
+        await fileTreeProvider.selectAll();
+      });
+    });
+
+    test('selectAll should fire change event', async () => {
+      const fireStub = sandbox.stub((fileTreeProvider as any)._onDidChangeTreeData, 'fire');
+
+      await fileTreeProvider.selectAll();
+
+      // selectAll後にイベントが発火されたことを確認
+      assert.strictEqual(fireStub.callCount, 1);
+    });
+
+    test('selectAll followed by uncheckAll should work correctly', async () => {
+      // selectAllを実行
+      await fileTreeProvider.selectAll();
+      
+      // 何らかのアイテムが選択される可能性がある（実際のファイルシステムに依存）
+      const afterSelectAll = fileTreeProvider.getCheckedItems();
+      
+      // uncheckAllを実行
+      fileTreeProvider.uncheckAll();
+      
+      // すべてクリアされることを確認
+      const afterUncheckAll = fileTreeProvider.getCheckedItems();
+      assert.strictEqual(afterUncheckAll.length, 0);
     });
   });
 });

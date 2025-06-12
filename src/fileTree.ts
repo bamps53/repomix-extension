@@ -27,9 +27,11 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   private checkedItems = new Map<string, boolean>();
 
   private workspaceRoot: string;
+  private context: vscode.ExtensionContext;
   
-  constructor(workspaceRoot: string) {
+  constructor(workspaceRoot: string, context: vscode.ExtensionContext) {
     this.workspaceRoot = workspaceRoot;
+    this.context = context;
   }
   
   /**
@@ -40,9 +42,20 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   }
 
   /**
-   * 変更イベントを発火させる
+   * ファイルツリーをリフレッシュし、すべての選択状態をリセットする
    */
   refresh(): void {
+    // すべての選択状態をクリア
+    this.checkedItems.clear();
+    
+    // ツリービューを更新
+    this._onDidChangeTreeData.fire();
+  }
+
+  /**
+   * 選択状態をクリアせずにツリービューのみ更新する
+   */
+  updateView(): void {
     this._onDidChangeTreeData.fire();
   }
 
@@ -55,11 +68,11 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     }
 
     const key = element.resourceUri.toString();
-    const isCurrentlyChecked = element.contextValue === 'checked';
+    // より確実なチェック状態の判定
+    const isCurrentlyChecked = this.checkedItems.get(key) || false;
 
     // 状態の更新
     this.checkedItems.set(key, !isCurrentlyChecked);
-    element.contextValue = isCurrentlyChecked ? 'unchecked' : 'checked';
     
     // アイテムがディレクトリの場合、すべての子アイテムも更新
     if (element.type === vscode.FileType.Directory) {
@@ -67,7 +80,7 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     }
 
     // UIを全体的に更新
-    this._onDidChangeTreeData.fire();
+    this.updateView();
   }
 
   /**
@@ -130,7 +143,43 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
    */
   uncheckAll(): void {
     this.checkedItems.clear();
-    this.refresh();
+    this.updateView();
+  }
+
+  /**
+   * すべてのファイルとフォルダを選択する
+   */
+  async selectAll(): Promise<void> {
+    try {
+      await this.selectAllRecursive(vscode.Uri.file(this.workspaceRoot));
+      this.updateView();
+    } catch (error) {
+      console.error('Error selecting all items:', error);
+    }
+  }
+
+  /**
+   * 指定されたディレクトリとその子アイテムを再帰的に選択する
+   */
+  private async selectAllRecursive(directoryUri: vscode.Uri): Promise<void> {
+    try {
+      const entries = await vscode.workspace.fs.readDirectory(directoryUri);
+      
+      for (const [name, type] of entries) {
+        const childUri = vscode.Uri.joinPath(directoryUri, name);
+        const key = childUri.toString();
+        
+        // すべてのアイテムを選択状態に設定
+        this.checkedItems.set(key, true);
+        
+        // ディレクトリの場合は再帰的に処理
+        if (type === vscode.FileType.Directory) {
+          await this.selectAllRecursive(childUri);
+        }
+      }
+    } catch (error) {
+      console.error(`Error selecting all items in directory ${directoryUri.fsPath}: ${error}`);
+    }
   }
 
   /**
@@ -146,7 +195,8 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     this.checkedItems.set(key, checked);
     
     if (fireEvent) {
-      this.refresh();
+      // 選択状態をクリアせずにビューのみ更新
+      this.updateView();
     }
   }
 
@@ -223,8 +273,15 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     // チェック状態をツールチップに表示
     treeItem.tooltip = `${fileName} ${isChecked ? '(selected)' : '(not selected)'}`;
 
-    // アイコンの設定 - VSCodeの組み込みアイコンを使用
-    treeItem.iconPath = new vscode.ThemeIcon(isChecked ? 'check' : 'circle-outline');
+    // アイコンの設定 - カスタムSVGアイコンを使用
+    const iconName = isChecked ? 'checked.svg' : 'unchecked.svg';
+    const iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'resources', iconName);
+    console.log(`Setting icon for ${fileName}: ${iconPath.toString()} (checked: ${isChecked})`);
+    
+    treeItem.iconPath = {
+      light: iconPath,
+      dark: iconPath
+    };
     
     // コンテキストバリューにチェック状態を追加
     treeItem.contextValue = isChecked ? 'checkedFileTreeItem' : 'uncheckedFileTreeItem';
