@@ -10,13 +10,14 @@ suite('ProfileManager Test Suite', () => {
   let mockProfiles: Profile[];
 
   setup(() => {
+    // 毎回新しい配列を作成してテスト間の影響を避ける
     mockProfiles = [
       { name: 'Profile1', paths: ['/path1', '/path2'], createdAt: 1600000000000 },
       { name: 'Profile2', paths: ['/path3'], createdAt: 1600000001000 },
     ];
 
     mockWorkspaceState = {
-      get: sinon.stub().returns(mockProfiles),
+      get: sinon.stub().returns([...mockProfiles]), // スプレッド演算子で新しい配列を作成
       update: sinon.stub().resolves(),
     };
 
@@ -54,10 +55,11 @@ suite('ProfileManager Test Suite', () => {
       assert.deepStrictEqual(result.paths, ['/path4', '/path5']);
       assert.strictEqual(result.createdAt, now);
       
+      const expectedProfiles = [...mockProfiles, result];
       sinon.assert.calledWithExactly(
         mockWorkspaceState.update,
         'repomix.profiles',
-        [...mockProfiles, result]
+        expectedProfiles
       );
     } finally {
       clock.restore();

@@ -1,0 +1,32 @@
+# Docker container for running VS Code extension tests in headless environment
+FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:18
+
+# Install dependencies for headless browser testing
+RUN apt-get update && apt-get install -y \
+    xvfb \
+    libasound2-dev \
+    libgtk-3-dev \
+    libxss1 \
+    libnss3-dev \
+    libgconf-2-4 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Compile TypeScript and tests
+RUN npm run compile-tests && npm run compile
+
+# Set up virtual display for headless testing
+ENV DISPLAY=:99
+
+# Start Xvfb and run tests
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 & npm run test"]

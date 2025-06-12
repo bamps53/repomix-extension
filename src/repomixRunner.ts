@@ -43,49 +43,57 @@ export async function executeRepomix(options: RepomixOptions): Promise<RepomixRe
   const startTime = Date.now();
   
   try {
-    // 実際にはここでrepomixを実行する
-    // 現在はモック実装
+    // Convert selected files to include patterns
+    // repomix works with directory and include patterns, not individual files
+    // The files are already relative paths from extension.ts
+    const includePatterns = options.files;
     
-    // 実際の実装では以下のような形でCLIを呼び出す
-    // const cmdArgs = options.files.map(f => `"${f}"`).join(' ');
-    // const { stdout, stderr } = await exec(`repomix ${cmdArgs}`, { cwd: options.workspaceRoot });
+    // Build the repomix command with include patterns
+    const includeArg = includePatterns.length > 0 
+      ? `--include "${includePatterns.join(',')}"` 
+      : '';
     
-    // モック実装として成功したと想定
-    await new Promise(resolve => setTimeout(resolve, 500)); // 処理時間をシミュレート
-
-    const fileDetails = options.files.map(file => {
-      return `- ${file} (処理成功)`;
-    }).join('\n');
+    // Always process the current directory (workspace root)
+    const command = `npx repomix ${includeArg} .`;
     
-    const output = `# Repomix 実行結果
+    console.log(`Executing: ${command}`);
+    console.log(`Working directory: ${options.workspaceRoot}`);
+    console.log(`Include patterns: ${includePatterns.join(', ')}`);
     
-## 実行情報
-
-- ワークスペース: ${options.workspaceRoot}
-- 処理ファイル数: ${options.files.length}
-
-## 処理されたファイル
-
-${fileDetails}
-
-## 実行結果
-
-すべてのファイルが正常に処理されました。`;
-
+    // Execute repomix CLI with selected files
+    const { stdout, stderr } = await exec(command, { 
+      cwd: options.workspaceRoot,
+      maxBuffer: 1024 * 1024 * 10 // 10MB buffer for large outputs
+    });
+    
+    // Check for stderr warnings but don't fail on them
+    if (stderr && stderr.trim()) {
+      console.warn('Repomix stderr output:', stderr);
+    }
+    
     return {
       success: true,
-      output,
+      output: stdout || 'Repomix executed successfully',
       timestamp: new Date(),
       executionTimeMs: Date.now() - startTime
     };
   } catch (error) {
-    // エラー発生時の処理
+    // Error handling
     console.error('Repomix execution error:', error);
+    
+    let errorMessage = 'Unknown error occurred';
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      // Check if repomix command is not found
+      if (errorMessage.includes('command not found') || errorMessage.includes('not recognized')) {
+        errorMessage = 'repomix command not found. Please ensure repomix is installed via npm (npm install -g repomix) or available as npx repomix.';
+      }
+    }
     
     return {
       success: false,
       output: '',
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
       timestamp: new Date(),
       executionTimeMs: Date.now() - startTime
     };
@@ -93,20 +101,27 @@ ${fileDetails}
 }
 
 /**
- * repomixの実行結果をVSCodeエディタに表示する
+ * Open the generated repomix-output.xml file in VS Code editor
  * 
- * @param result repomixの実行結果
+ * @param options repomix execution options containing workspace root
  */
-export async function showRepomixResult(result: RepomixResult): Promise<void> {
+export async function showRepomixResult(options: RepomixOptions): Promise<void> {
   try {
-    // 新しいエディタタブを開いて結果を表示
-    const document = await vscode.workspace.openTextDocument({
-      content: result.success ? result.output : `# Repomix 実行エラー\n\n${result.error}`,
-      language: 'markdown'
-    });
+    // repomix-output.xml file path
+    const outputFilePath = path.join(options.workspaceRoot, 'repomix-output.xml');
     
-    await vscode.window.showTextDocument(document);
+    // Check if the file exists
+    const outputUri = vscode.Uri.file(outputFilePath);
+    
+    try {
+      // Try to open the generated XML file
+      const document = await vscode.workspace.openTextDocument(outputUri);
+      await vscode.window.showTextDocument(document);
+    } catch (fileError) {
+      // If file doesn't exist, show an error message
+      vscode.window.showErrorMessage(`repomix-output.xml not found at: ${outputFilePath}`);
+    }
   } catch (error) {
-    vscode.window.showErrorMessage(`結果の表示に失敗しました: ${error}`);
+    vscode.window.showErrorMessage(`Failed to open result file: ${error}`);
   }
 }

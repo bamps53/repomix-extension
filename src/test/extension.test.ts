@@ -1,15 +1,38 @@
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
+import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-// import * as myExtension from '../../extension';
+import * as path from 'path';
 
-suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+suite('Extension Integration Test Suite', () => {
+	let sandbox: sinon.SinonSandbox;
 
-	test('Sample test', () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
+	setup(() => {
+		sandbox = sinon.createSandbox();
+	});
+
+	teardown(() => {
+		sandbox.restore();
+	});
+
+	test('Extension should handle activation properly', async () => {
+		// Basic smoke test to ensure extension loads without errors
+		assert.ok(vscode);
+		assert.ok(vscode.commands);
+		assert.ok(vscode.window);
+	});
+
+	test('VS Code API availability', () => {
+		// Check that required VS Code APIs are available
+		assert.ok(vscode.workspace);
+		assert.ok(vscode.workspace.fs);
+		assert.ok(vscode.TreeItem);
+		assert.ok(vscode.FileType);
+	});
+
+	test('Basic functionality test', () => {
+		// Test basic VS Code extension constructs
+		const uri = vscode.Uri.file('/test/path');
+		assert.ok(uri);
+		assert.strictEqual(uri.fsPath, '/test/path');
 	});
 });

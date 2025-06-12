@@ -29,9 +29,6 @@ export function activate(context: vscode.ExtensionContext) {
   
   // ファイルツリービューの登録
   vscode.window.registerTreeDataProvider('repomixFileExplorer', fileTreeProvider);
-  
-  // プロファイル管理ビューの登録
-  vscode.window.registerTreeDataProvider('repomixProfiles', profileManager);
 
   // トグルコマンドを登録
   context.subscriptions.push(
@@ -44,7 +41,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.refresh', () => {
       fileTreeProvider.refresh();
-      vscode.window.showInformationMessage('Repomix: ファイルツリーを更新しました');
+      vscode.window.showInformationMessage('Repomix: File tree refreshed');
     })
   );
 
@@ -52,8 +49,8 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.saveProfile', async () => {
       const profileName = await vscode.window.showInputBox({
-        title: 'プロファイル名を入力',
-        placeHolder: '例：project-a-config',
+        title: 'Enter profile name',
+        placeHolder: 'e.g. project-a-config',
       });
 
       if (profileName) {
@@ -63,12 +60,76 @@ export function activate(context: vscode.ExtensionContext) {
         // ProfileManagerを使用してプロファイルを保存
         const savedProfile = profileManager.saveProfile(profileName, checkedItems);
         
-        vscode.window.showInformationMessage(`プロファイル「${profileName}」を保存しました。`);
+        vscode.window.showInformationMessage(`Profile "${profileName}" saved successfully.`);
       }
     })
   );
 
-  // プロファイル読み込みコマンドの登録
+  // プロファイル管理コマンドの登録
+  context.subscriptions.push(
+    vscode.commands.registerCommand('repomix-extension.manageProfiles', async () => {
+      const profiles = profileManager.getProfiles();
+      
+      if (profiles.length === 0) {
+        vscode.window.showInformationMessage('No saved profiles found.');
+        return;
+      }
+      
+      // プロファイル選択肢を作成（Load と Delete オプション付き）
+      const profileItems = profiles.flatMap(profile => [
+        {
+          label: `$(folder-opened) Load: ${profile.name}`,
+          description: `${profile.paths.length} files - ${new Date(profile.createdAt).toLocaleString()}`,
+          action: 'load',
+          profile: profile
+        },
+        {
+          label: `$(trash) Delete: ${profile.name}`,
+          description: `${profile.paths.length} files - ${new Date(profile.createdAt).toLocaleString()}`,
+          action: 'delete',
+          profile: profile
+        }
+      ]);
+      
+      const selectedItem = await vscode.window.showQuickPick(profileItems, {
+        title: 'Manage Profiles',
+        placeHolder: 'Select an action for a profile...',
+      });
+      
+      if (selectedItem) {
+        if (selectedItem.action === 'load') {
+          // ファイルツリーの選択状態をリセット
+          fileTreeProvider.uncheckAll();
+          
+          // 保存されていたパスを選択状態に設定
+          for (const path of selectedItem.profile.paths) {
+            fileTreeProvider.setChecked(path, true, false);
+          }
+          
+          // ツリービューを更新
+          fileTreeProvider.refresh();
+          
+          vscode.window.showInformationMessage(`Profile "${selectedItem.profile.name}" loaded successfully.`);
+        } else if (selectedItem.action === 'delete') {
+          // 確認ダイアログを表示
+          const confirmed = await vscode.window.showWarningMessage(
+            `Delete profile "${selectedItem.profile.name}"?`, 
+            { modal: true },
+            'Delete'
+          );
+          
+          if (confirmed === 'Delete') {
+            const deleted = profileManager.deleteProfile(selectedItem.profile.name);
+            if (deleted) {
+              vscode.window.showInformationMessage(`Profile "${selectedItem.profile.name}" deleted successfully.`);
+            }
+          }
+        }
+      }
+    })
+  );
+
+  // プロファイル読み込みコマンドの登録（従来のコマンド維持）
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.loadProfile', async (profileItem?: any) => {
       let profileName: string | undefined;
@@ -81,7 +142,7 @@ export function activate(context: vscode.ExtensionContext) {
         const profiles = profileManager.getProfiles();
         
         if (profiles.length === 0) {
-          vscode.window.showInformationMessage('保存されているプロファイルがありません。');
+          vscode.window.showInformationMessage('No saved profiles found.');
           return;
         }
         
@@ -93,8 +154,8 @@ export function activate(context: vscode.ExtensionContext) {
             profile: p
           })),
           {
-            title: '読み込むプロファイルを選択',
-            placeHolder: 'プロファイルを選択...',
+            title: 'Select profile to load',
+            placeHolder: 'Select a profile...',
           }
         );
         
@@ -117,7 +178,7 @@ export function activate(context: vscode.ExtensionContext) {
           // ツリービューを更新
           fileTreeProvider.refresh();
           
-          vscode.window.showInformationMessage(`プロファイル「${profileName}」を読み込みました。`);
+          vscode.window.showInformationMessage(`Profile "${profileName}" loaded successfully.`);
         }
       }
     })
@@ -136,7 +197,7 @@ export function activate(context: vscode.ExtensionContext) {
         const profiles = profileManager.getProfiles();
         
         if (profiles.length === 0) {
-          vscode.window.showInformationMessage('保存されているプロファイルがありません。');
+          vscode.window.showInformationMessage('No saved profiles found.');
           return;
         }
         
@@ -148,8 +209,8 @@ export function activate(context: vscode.ExtensionContext) {
             profile: p
           })),
           {
-            title: '削除するプロファイルを選択',
-            placeHolder: 'プロファイルを選択...',
+            title: 'Select profile to delete',
+            placeHolder: 'Select a profile...',
           }
         );
         
@@ -159,17 +220,17 @@ export function activate(context: vscode.ExtensionContext) {
       if (profileName) {
         // 確認ダイアログを表示
         const confirmed = await vscode.window.showWarningMessage(
-          `プロファイル「${profileName}」を削除しますか？`, 
+          `Delete profile "${profileName}"?`, 
           { modal: true },
-          '削除'
+          'Delete'
         );
         
-        if (confirmed === '削除') {
+        if (confirmed === 'Delete') {
           // ProfileManagerを使用してプロファイルを削除
           const deleted = profileManager.deleteProfile(profileName);
           
           if (deleted) {
-            vscode.window.showInformationMessage(`プロファイル「${profileName}」を削除しました。`);
+            vscode.window.showInformationMessage(`Profile "${profileName}" deleted successfully.`);
           }
         }
       }
@@ -182,12 +243,12 @@ export function activate(context: vscode.ExtensionContext) {
       const checkedPaths = fileTreeProvider.getCheckedItems();
       
       if (checkedPaths.length === 0) {
-        vscode.window.showWarningMessage('ファイルが選択されていません。実行するファイルを選択してください。');
+        vscode.window.showWarningMessage('No files selected. Please select files to execute.');
         return;
       }
       
       try {
-        vscode.window.showInformationMessage('Repomix を実行中...');
+        vscode.window.showInformationMessage('Executing Repomix...');
 
         // ワークスペースルートを取得
         const wsRoot = fileTreeProvider.getWorkspaceRoot();
@@ -214,18 +275,18 @@ export function activate(context: vscode.ExtensionContext) {
         // repomixを実行して結果を取得
         const result = await executeRepomix(repomixOptions);
         
-        // 結果をエディタに表示
-        await showRepomixResult(result);
+        // 生成されたXMLファイルを開く
+        await showRepomixResult(repomixOptions);
         
         // 実行結果に応じて通知を表示
         if (result.success) {
-          vscode.window.showInformationMessage(`Repomixの実行が完了しました。${fileInfo.length}個のファイルを処理しました。`);
+          vscode.window.showInformationMessage(`Repomix execution completed. Processed ${fileInfo.length} files.`);
         } else {
-          vscode.window.showErrorMessage(`Repomixの実行中にエラーが発生しました: ${result.error}`);
+          vscode.window.showErrorMessage(`Repomix execution failed: ${result.error}`);
         }
       } catch (error) {
         console.error('Error executing repomix:', error);
-        vscode.window.showErrorMessage(`Repomix の実行に失敗しました: ${error}`);
+        vscode.window.showErrorMessage(`Failed to execute Repomix: ${error}`);
       }
     })
   );

@@ -1,10 +1,12 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import * as vscode from 'vscode';
-import { executeRepomix, RepomixOptions, showRepomixResult } from '../../repomixRunner';
+import * as fs from 'fs';
+import * as path from 'path';
+import { executeRepomix, RepomixOptions } from '../../repomixRunner';
 
 suite('RepomixRunner Tests', () => {
   let sandbox: sinon.SinonSandbox;
+  const testWorkspace = '/tmp/test-workspace';
 
   setup(() => {
     sandbox = sinon.createSandbox();
@@ -14,11 +16,11 @@ suite('RepomixRunner Tests', () => {
     sandbox.restore();
   });
 
-  test('executeRepomix should return success result with mock data', async () => {
-    // テスト用のオプション
+  test('executeRepomix should return success result with actual execution', async () => {
+    // テスト用のオプション - 実際のテストワークスペースを使用
     const options: RepomixOptions = {
-      files: ['test/file1.txt', 'test/file2.txt'],
-      workspaceRoot: '/test/workspace'
+      files: ['file1.txt', 'file2.txt'],
+      workspaceRoot: testWorkspace
     };
 
     // 実行
@@ -26,104 +28,58 @@ suite('RepomixRunner Tests', () => {
 
     // 検証
     assert.strictEqual(result.success, true, 'Repomix execution should succeed');
-    assert.ok(result.output.includes('処理ファイル数: 2'), 'Output should contain file count');
-    assert.ok(result.output.includes('test/file1.txt'), 'Output should contain file1');
-    assert.ok(result.output.includes('test/file2.txt'), 'Output should contain file2');
-    assert.ok(result.executionTimeMs !== undefined, 'Execution time should be measured');
+    assert.ok(result.output && result.output.length > 0, 'Output should contain repomix result');
+    assert.ok(result.executionTimeMs !== undefined && result.executionTimeMs >= 0, 'Execution time should be measured');
+    assert.ok(result.timestamp instanceof Date, 'Timestamp should be set');
   });
 
   test('executeRepomix should handle empty file list', async () => {
     // 空のファイルリスト
     const options: RepomixOptions = {
       files: [],
-      workspaceRoot: '/test/workspace'
+      workspaceRoot: testWorkspace
     };
 
     // 実行
     const result = await executeRepomix(options);
 
-    // 検証
+    // 検証 - 空のファイルリストでも処理可能
     assert.strictEqual(result.success, true, 'Should succeed with empty file list');
-    assert.ok(result.output.includes('処理ファイル数: 0'), 'Output should show zero files');
+    assert.ok(result.output !== undefined, 'Output should be defined');
+    assert.ok(result.executionTimeMs !== undefined, 'Execution time should be measured');
   });
 
-  test('showRepomixResult should open editor with success result', async () => {
-    // モックの準備
-    const mockDocument = {};
-    const openTextDocumentStub = sandbox.stub(vscode.workspace, 'openTextDocument').resolves(mockDocument as any);
-    const showTextDocumentStub = sandbox.stub(vscode.window, 'showTextDocument').resolves();
-
-    // テスト用の結果データ
-    const result = {
-      success: true,
-      output: '# テスト結果\n\n成功しました',
-      timestamp: new Date(),
-      executionTimeMs: 100,
-      error: undefined
+  test('executeRepomix should handle specific file selection', async () => {
+    const options: RepomixOptions = {
+      files: ['subfolder/file3.js'],
+      workspaceRoot: testWorkspace
     };
 
-    // 実行
-    await showRepomixResult(result);
+    const result = await executeRepomix(options);
 
-    // 検証
-    assert.strictEqual(openTextDocumentStub.calledOnce, true, 'Should call openTextDocument once');
-    assert.strictEqual(showTextDocumentStub.calledOnce, true, 'Should call showTextDocument once');
+    assert.strictEqual(result.success, true, 'Should succeed with specific file');
+    assert.ok(result.output, 'Should have output');
+    assert.ok(result.executionTimeMs !== undefined, 'Execution time should be measured');
+  });
+
+  test('executeRepomix should generate XML output file', async () => {
+    const options: RepomixOptions = {
+      files: ['file1.txt'],
+      workspaceRoot: testWorkspace
+    };
+
+    const result = await executeRepomix(options);
     
-    // 型エラー回避のために引数の存在を確認
-    const firstCallArgs = openTextDocumentStub.firstCall?.args?.[0];
-    assert.ok(firstCallArgs, 'openTextDocument should have been called with arguments');
-    assert.strictEqual(firstCallArgs.content, '# テスト結果\n\n成功しました', 'Content should match');
-    assert.strictEqual(firstCallArgs.language, 'markdown', 'Language should be markdown');
-  });
-
-  test('showRepomixResult should open editor with error result', async () => {
-    // モックの準備
-    const mockDocument = {};
-    const openTextDocumentStub = sandbox.stub(vscode.workspace, 'openTextDocument').resolves(mockDocument as any);
-    const showTextDocumentStub = sandbox.stub(vscode.window, 'showTextDocument').resolves();
-
-    // テスト用のエラー結果
-    const result = {
-      success: false,
-      output: '',
-      error: 'テストエラー',
-      timestamp: new Date(),
-      executionTimeMs: 50
-    };
-
-    // 実行
-    await showRepomixResult(result);
-
-    // 検証
-    assert.strictEqual(openTextDocumentStub.calledOnce, true, 'Should call openTextDocument once');
+    // Check if output file was created
+    const outputPath = path.join(testWorkspace, 'repomix-output.xml');
+    const outputExists = fs.existsSync(outputPath);
     
-    const firstCallArgs = openTextDocumentStub.firstCall?.args?.[0];
-    assert.ok(firstCallArgs, 'openTextDocument should have been called with arguments');
-    assert.ok(
-      firstCallArgs.content && firstCallArgs.content.includes('テストエラー'), 
-      'Should include error message in content'
-    );
-  });
-
-  test('showRepomixResult should handle exceptions', async () => {
-    // モックの準備
-    const openTextDocumentStub = sandbox.stub(vscode.workspace, 'openTextDocument')
-      .throws(new Error('テスト例外'));
-    const showErrorMessageStub = sandbox.stub(vscode.window, 'showErrorMessage');
-
-    // テスト用の結果データ
-    const result = {
-      success: true,
-      output: '# テスト結果',
-      timestamp: new Date(),
-      executionTimeMs: 100
-    };
-
-    // 実行
-    await showRepomixResult(result);
-
-    // 検証
-    assert.strictEqual(showErrorMessageStub.calledOnce, true, 'Should show error message');
-    assert.ok(showErrorMessageStub.firstCall.args[0].includes('失敗'), 'Error message should indicate failure');
+    assert.strictEqual(result.success, true, 'Execution should succeed');
+    assert.strictEqual(outputExists, true, 'repomix-output.xml should be created');
+    
+    // Clean up output file after test
+    if (outputExists) {
+      fs.unlinkSync(outputPath);
+    }
   });
 });
