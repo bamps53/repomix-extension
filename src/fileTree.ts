@@ -352,7 +352,7 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
       if (this.isTestEnvironment) {
         // モックのreadDirectoryを使用（これは安全）
         const entries = await vscode.workspace.fs.readDirectory(directoryUri);
-        return entries.map(([name, type]) => {
+        const items = entries.map(([name, type]) => {
           const uri = vscode.Uri.joinPath(directoryUri, name);
           const key = uri.toString();
           const isChecked = this.checkedItems.get(key) || false;
@@ -363,6 +363,27 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
             contextValue: isChecked ? 'checked' : 'unchecked'
           };
         });
+        
+        // VS Codeのデフォルトの並び順に従って、フォルダを先に、次にファイルを表示
+        items.sort((a, b) => {
+          // まず、フォルダとファイルを分ける
+          const aIsDirectory = a.type === vscode.FileType.Directory;
+          const bIsDirectory = b.type === vscode.FileType.Directory;
+          
+          if (aIsDirectory && !bIsDirectory) {
+            return -1; // aがフォルダ、bがファイルの場合、aを先に
+          }
+          if (!aIsDirectory && bIsDirectory) {
+            return 1; // aがファイル、bがフォルダの場合、bを先に
+          }
+          
+          // 両方が同じタイプの場合、名前でソート（大文字小文字を区別しない）
+          const aName = path.basename(a.resourceUri.fsPath).toLowerCase();
+          const bName = path.basename(b.resourceUri.fsPath).toLowerCase();
+          return aName.localeCompare(bName);
+        });
+        
+        return items;
       }
       
       // 実際のファイルシステムの場合、存在確認
@@ -399,6 +420,25 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
           });
         }
       }
+      
+      // VS Codeのデフォルトの並び順に従って、フォルダを先に、次にファイルを表示
+      filteredEntries.sort((a, b) => {
+        // まず、フォルダとファイルを分ける
+        const aIsDirectory = a.type === vscode.FileType.Directory;
+        const bIsDirectory = b.type === vscode.FileType.Directory;
+        
+        if (aIsDirectory && !bIsDirectory) {
+          return -1; // aがフォルダ、bがファイルの場合、aを先に
+        }
+        if (!aIsDirectory && bIsDirectory) {
+          return 1; // aがファイル、bがフォルダの場合、bを先に
+        }
+        
+        // 両方が同じタイプの場合、名前でソート（大文字小文字を区別しない）
+        const aName = path.basename(a.resourceUri.fsPath).toLowerCase();
+        const bName = path.basename(b.resourceUri.fsPath).toLowerCase();
+        return aName.localeCompare(bName);
+      });
       
       return filteredEntries;
     } catch (error) {
