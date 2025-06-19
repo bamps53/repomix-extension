@@ -16,7 +16,8 @@ interface Profile {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('🔥 Repomix Extension activated!');
+  console.log('🚀 Repomix Extension is now active!');
+  console.log('Extension URI:', context.extensionUri.toString());
   
   // 作業ディレクトリを取得
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath || '';
@@ -42,9 +43,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   // リフレッシュコマンドを登録
   context.subscriptions.push(
-    vscode.commands.registerCommand('repomix-extension.refresh', () => {
-      fileTreeProvider.refresh();
-      vscode.window.showInformationMessage('File tree refreshed and all selections cleared');
+    vscode.commands.registerCommand('repomix-extension.refresh', async () => {
+      await fileTreeProvider.refresh();
+      vscode.window.showInformationMessage('File tree refreshed with repomix patterns');
     })
   );
 

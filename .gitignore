@@ -4,4 +4,9 @@ node_modules
 .vscode-test/
 *.vsix
 
+# Test coverage output
+.nyc_output
+coverage/
+
+# Repomix output
 repomix-output.xml

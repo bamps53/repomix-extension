@@ -1,0 +1,24 @@
+{
+  "extends": "@istanbuljs/nyc-config-typescript",
+  "include": [
+    "out/*.js"
+  ],
+  "exclude": [
+    "out/test/**",
+    "out/extension.test.js",
+    "out/integration.test.js",
+    "**/*.d.ts"
+  ],
+  "reporter": [
+    "text",
+    "text-summary",
+    "html"
+  ],
+  "all": true,
+  "check-coverage": true,
+  "lines": 80,
+  "functions": 80,
+  "branches": 70,
+  "statements": 80,
+  "report-dir": "coverage"
+}

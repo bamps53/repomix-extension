@@ -1,0 +1,22 @@
+{
+  "include": [
+    "out/*.js"
+  ],
+  "exclude": [
+    "out/test/**",
+    "out/extension.test.js",
+    "out/integration.test.js"
+  ],
+  "reporter": [
+    "text",
+    "text-summary",
+    "html"
+  ],
+  "all": true,
+  "check-coverage": true,
+  "lines": 55,
+  "functions": 70,
+  "branches": 70,
+  "statements": 55,
+  "reports-dir": "coverage"
+}

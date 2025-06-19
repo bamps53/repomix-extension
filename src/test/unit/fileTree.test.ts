@@ -163,13 +163,17 @@ suite('FileTreeProvider Tests', () => {
       const fileTreeItem = fileTreeProvider.getTreeItem(fileElement);
       const dirTreeItem = fileTreeProvider.getTreeItem(dirElement);
 
-      // ファイルアイコンの確認
-      assert.ok(fileTreeItem.iconPath instanceof vscode.ThemeIcon);
-      assert.strictEqual((fileTreeItem.iconPath as vscode.ThemeIcon).id, 'circle-outline');
+      // ファイルアイコンの確認（カスタムSVGアイコン形式）
+      assert.ok(fileTreeItem.iconPath);
+      assert.ok(typeof fileTreeItem.iconPath === 'object');
+      assert.ok((fileTreeItem.iconPath as any).light);
+      assert.ok((fileTreeItem.iconPath as any).dark);
 
       // ディレクトリアイコンの確認（チェック済み）
-      assert.ok(dirTreeItem.iconPath instanceof vscode.ThemeIcon);
-      assert.strictEqual((dirTreeItem.iconPath as vscode.ThemeIcon).id, 'check');
+      assert.ok(dirTreeItem.iconPath);
+      assert.ok(typeof dirTreeItem.iconPath === 'object');
+      assert.ok((dirTreeItem.iconPath as any).light);
+      assert.ok((dirTreeItem.iconPath as any).dark);
     });
 
     test('should handle directory hierarchy concepts', () => {

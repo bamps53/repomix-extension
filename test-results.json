@@ -1,0 +1,1132 @@
+
+> repomix-extension@0.0.2 test:mocha
+> mocha --config ./mocha.json --reporter json
+
+Executing: npx repomix --include "file1.txt,file2.txt" .
+Working directory: /tmp/test-workspace
+Include patterns: file1.txt, file2.txt
+Executing: npx repomix  .
+Working directory: /tmp/test-workspace
+Include patterns: 
+Executing: npx repomix --include "subfolder/file3.js" .
+Working directory: /tmp/test-workspace
+Include patterns: subfolder/file3.js
+Executing: npx repomix --include "file1.txt" .
+Working directory: /tmp/test-workspace
+Include patterns: file1.txt
+{
+  "stats": {
+    "suites": 17,
+    "tests": 61,
+    "passes": 61,
+    "pending": 0,
+    "failures": 0,
+    "start": "2025-06-12T22:10:25.249Z",
+    "end": "2025-06-12T22:10:27.780Z",
+    "duration": 2531
+  },
+  "tests": [
+    {
+      "title": "should handle file system error scenarios",
+      "fullTitle": "Error Handling Test Suite FileTreeProvider Error Handling should handle file system error scenarios",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/errorHandling.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle invalid URIs gracefully",
+      "fullTitle": "Error Handling Test Suite FileTreeProvider Error Handling should handle invalid URIs gracefully",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/errorHandling.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle corrupted profile data",
+      "fullTitle": "Error Handling Test Suite ProfileManager Error Handling should handle corrupted profile data",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/errorHandling.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle large file lists without memory issues",
+      "fullTitle": "Error Handling Test Suite Memory Management should handle large file lists without memory issues",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/errorHandling.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getWorkspaceRoot should return the correct workspace root",
+      "fullTitle": "FileTreeProvider Tests getWorkspaceRoot should return the correct workspace root",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "toggleChecked should toggle item checked state",
+      "fullTitle": "FileTreeProvider Tests toggleChecked should toggle item checked state",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked should set checked state directly",
+      "fullTitle": "FileTreeProvider Tests setChecked should set checked state directly",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "uncheckAll should clear all checked items",
+      "fullTitle": "FileTreeProvider Tests uncheckAll should clear all checked items",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getCheckedItems should return array of checked paths",
+      "fullTitle": "FileTreeProvider Tests getCheckedItems should return array of checked paths",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked should handle non-existent paths",
+      "fullTitle": "FileTreeProvider Tests setChecked should handle non-existent paths",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked with fireEvent should trigger change event",
+      "fullTitle": "FileTreeProvider Tests setChecked with fireEvent should trigger change event",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle file system structure concepts",
+      "fullTitle": "FileTreeProvider Tests File System Integration Tests should handle file system structure concepts",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should create correct icons for different file types",
+      "fullTitle": "FileTreeProvider Tests File System Integration Tests getTreeItem should create correct icons for different file types",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle directory hierarchy concepts",
+      "fullTitle": "FileTreeProvider Tests File System Integration Tests should handle directory hierarchy concepts",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle large numbers of files efficiently",
+      "fullTitle": "FileTreeProvider Tests Performance Tests should handle large numbers of files efficiently",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle rapid toggle operations",
+      "fullTitle": "FileTreeProvider Tests Performance Tests should handle rapid toggle operations",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should create proper file system items structure",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration should create proper file system items structure",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle empty children arrays correctly",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration should handle empty children arrays correctly",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked should properly set and maintain check state",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration setChecked should properly set and maintain check state",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "uncheckAll should clear all checked items",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration uncheckAll should clear all checked items",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "updateView should not affect checked state",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration updateView should not affect checked state",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "refresh should clear all checked items (different from updateView)",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration refresh should clear all checked items (different from updateView)",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should create proper TreeItem for files",
+      "fullTitle": "FileTreeProvider Advanced Tests Tree Item Creation getTreeItem should create proper TreeItem for files",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should create proper TreeItem for directories",
+      "fullTitle": "FileTreeProvider Advanced Tests Tree Item Creation getTreeItem should create proper TreeItem for directories",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should set up toggle command correctly",
+      "fullTitle": "FileTreeProvider Advanced Tests Tree Item Creation getTreeItem should set up toggle command correctly",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should support recursive directory concepts",
+      "fullTitle": "FileTreeProvider Advanced Tests Recursive Directory Operations should support recursive directory concepts",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle directory state changes",
+      "fullTitle": "FileTreeProvider Advanced Tests Recursive Directory Operations should handle directory state changes",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "toggleChecked should fire change events",
+      "fullTitle": "FileTreeProvider Advanced Tests Event Handling toggleChecked should fire change events",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked with fireEvent should trigger change event",
+      "fullTitle": "FileTreeProvider Advanced Tests Event Handling setChecked with fireEvent should trigger change event",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "uncheckAll should fire change event",
+      "fullTitle": "FileTreeProvider Advanced Tests Event Handling uncheckAll should fire change event",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle invalid URIs gracefully",
+      "fullTitle": "FileTreeProvider Advanced Tests Edge Cases and Error Handling should handle invalid URIs gracefully",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle concurrent toggle operations",
+      "fullTitle": "FileTreeProvider Advanced Tests Edge Cases and Error Handling should handle concurrent toggle operations",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle deeply nested paths",
+      "fullTitle": "FileTreeProvider Advanced Tests Edge Cases and Error Handling should handle deeply nested paths",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "selectAll should exist as a method",
+      "fullTitle": "FileTreeProvider Advanced Tests Select All Functionality selectAll should exist as a method",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "selectAll should not throw errors",
+      "fullTitle": "FileTreeProvider Advanced Tests Select All Functionality selectAll should not throw errors",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "selectAll should fire change event",
+      "fullTitle": "FileTreeProvider Advanced Tests Select All Functionality selectAll should fire change event",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "selectAll followed by uncheckAll should work correctly",
+      "fullTitle": "FileTreeProvider Advanced Tests Select All Functionality selectAll followed by uncheckAll should work correctly",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getProfiles should retrieve profiles from workspace state",
+      "fullTitle": "ProfileManager Test Suite getProfiles should retrieve profiles from workspace state",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "saveProfile should create a new profile when it does not exist",
+      "fullTitle": "ProfileManager Test Suite saveProfile should create a new profile when it does not exist",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "saveProfile should update an existing profile",
+      "fullTitle": "ProfileManager Test Suite saveProfile should update an existing profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "loadProfile should return the requested profile",
+      "fullTitle": "ProfileManager Test Suite loadProfile should return the requested profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "loadProfile should return undefined for non-existent profile",
+      "fullTitle": "ProfileManager Test Suite loadProfile should return undefined for non-existent profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "deleteProfile should remove the profile and return true if successful",
+      "fullTitle": "ProfileManager Test Suite deleteProfile should remove the profile and return true if successful",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "deleteProfile should return false if profile does not exist",
+      "fullTitle": "ProfileManager Test Suite deleteProfile should return false if profile does not exist",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getChildren should return ProfileItems for each profile",
+      "fullTitle": "ProfileManager Test Suite getChildren should return ProfileItems for each profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 4,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should return the provided ProfileItem",
+      "fullTitle": "ProfileManager Test Suite getTreeItem should return the provided ProfileItem",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "ProfileItem should have the correct properties",
+      "fullTitle": "ProfileManager Test Suite ProfileItem should have the correct properties",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "renameProfile should rename existing profile successfully",
+      "fullTitle": "ProfileManager Test Suite renameProfile should rename existing profile successfully",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "renameProfile should return false for non-existent profile",
+      "fullTitle": "ProfileManager Test Suite renameProfile should return false for non-existent profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "renameProfile should return false if new name already exists",
+      "fullTitle": "ProfileManager Test Suite renameProfile should return false if new name already exists",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "renameProfile should allow renaming to the same name",
+      "fullTitle": "ProfileManager Test Suite renameProfile should allow renaming to the same name",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "executeRepomix should return success result with actual execution",
+      "fullTitle": "RepomixRunner Tests executeRepomix should return success result with actual execution",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.test.ts",
+      "duration": 644,
+      "currentRetry": 0,
+      "speed": "slow",
+      "err": {}
+    },
+    {
+      "title": "executeRepomix should handle empty file list",
+      "fullTitle": "RepomixRunner Tests executeRepomix should handle empty file list",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.test.ts",
+      "duration": 613,
+      "currentRetry": 0,
+      "speed": "slow",
+      "err": {}
+    },
+    {
+      "title": "executeRepomix should handle specific file selection",
+      "fullTitle": "RepomixRunner Tests executeRepomix should handle specific file selection",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.test.ts",
+      "duration": 613,
+      "currentRetry": 0,
+      "speed": "slow",
+      "err": {}
+    },
+    {
+      "title": "executeRepomix should generate XML output file",
+      "fullTitle": "RepomixRunner Tests executeRepomix should generate XML output file",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.test.ts",
+      "duration": 637,
+      "currentRetry": 0,
+      "speed": "slow",
+      "err": {}
+    },
+    {
+      "title": "RepomixOptions interface should be correctly structured",
+      "fullTitle": "RepomixRunner Unit Tests RepomixOptions interface should be correctly structured",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "RepomixResult interface should be correctly structured",
+      "fullTitle": "RepomixRunner Unit Tests RepomixResult interface should be correctly structured",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle different file patterns",
+      "fullTitle": "RepomixRunner Unit Tests should handle different file patterns",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle command construction concepts",
+      "fullTitle": "RepomixRunner Unit Tests should handle command construction concepts",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle error result structure",
+      "fullTitle": "RepomixRunner Unit Tests should handle error result structure",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should validate execution time measurement",
+      "fullTitle": "RepomixRunner Unit Tests should validate execution time measurement",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    }
+  ],
+  "pending": [],
+  "failures": [],
+  "passes": [
+    {
+      "title": "should handle file system error scenarios",
+      "fullTitle": "Error Handling Test Suite FileTreeProvider Error Handling should handle file system error scenarios",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/errorHandling.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle invalid URIs gracefully",
+      "fullTitle": "Error Handling Test Suite FileTreeProvider Error Handling should handle invalid URIs gracefully",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/errorHandling.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle corrupted profile data",
+      "fullTitle": "Error Handling Test Suite ProfileManager Error Handling should handle corrupted profile data",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/errorHandling.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle large file lists without memory issues",
+      "fullTitle": "Error Handling Test Suite Memory Management should handle large file lists without memory issues",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/errorHandling.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getWorkspaceRoot should return the correct workspace root",
+      "fullTitle": "FileTreeProvider Tests getWorkspaceRoot should return the correct workspace root",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "toggleChecked should toggle item checked state",
+      "fullTitle": "FileTreeProvider Tests toggleChecked should toggle item checked state",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked should set checked state directly",
+      "fullTitle": "FileTreeProvider Tests setChecked should set checked state directly",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "uncheckAll should clear all checked items",
+      "fullTitle": "FileTreeProvider Tests uncheckAll should clear all checked items",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getCheckedItems should return array of checked paths",
+      "fullTitle": "FileTreeProvider Tests getCheckedItems should return array of checked paths",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked should handle non-existent paths",
+      "fullTitle": "FileTreeProvider Tests setChecked should handle non-existent paths",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked with fireEvent should trigger change event",
+      "fullTitle": "FileTreeProvider Tests setChecked with fireEvent should trigger change event",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle file system structure concepts",
+      "fullTitle": "FileTreeProvider Tests File System Integration Tests should handle file system structure concepts",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should create correct icons for different file types",
+      "fullTitle": "FileTreeProvider Tests File System Integration Tests getTreeItem should create correct icons for different file types",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle directory hierarchy concepts",
+      "fullTitle": "FileTreeProvider Tests File System Integration Tests should handle directory hierarchy concepts",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle large numbers of files efficiently",
+      "fullTitle": "FileTreeProvider Tests Performance Tests should handle large numbers of files efficiently",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle rapid toggle operations",
+      "fullTitle": "FileTreeProvider Tests Performance Tests should handle rapid toggle operations",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTree.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should create proper file system items structure",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration should create proper file system items structure",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle empty children arrays correctly",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration should handle empty children arrays correctly",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked should properly set and maintain check state",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration setChecked should properly set and maintain check state",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "uncheckAll should clear all checked items",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration uncheckAll should clear all checked items",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "updateView should not affect checked state",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration updateView should not affect checked state",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "refresh should clear all checked items (different from updateView)",
+      "fullTitle": "FileTreeProvider Advanced Tests File System Integration refresh should clear all checked items (different from updateView)",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should create proper TreeItem for files",
+      "fullTitle": "FileTreeProvider Advanced Tests Tree Item Creation getTreeItem should create proper TreeItem for files",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should create proper TreeItem for directories",
+      "fullTitle": "FileTreeProvider Advanced Tests Tree Item Creation getTreeItem should create proper TreeItem for directories",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should set up toggle command correctly",
+      "fullTitle": "FileTreeProvider Advanced Tests Tree Item Creation getTreeItem should set up toggle command correctly",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should support recursive directory concepts",
+      "fullTitle": "FileTreeProvider Advanced Tests Recursive Directory Operations should support recursive directory concepts",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle directory state changes",
+      "fullTitle": "FileTreeProvider Advanced Tests Recursive Directory Operations should handle directory state changes",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "toggleChecked should fire change events",
+      "fullTitle": "FileTreeProvider Advanced Tests Event Handling toggleChecked should fire change events",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "setChecked with fireEvent should trigger change event",
+      "fullTitle": "FileTreeProvider Advanced Tests Event Handling setChecked with fireEvent should trigger change event",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "uncheckAll should fire change event",
+      "fullTitle": "FileTreeProvider Advanced Tests Event Handling uncheckAll should fire change event",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle invalid URIs gracefully",
+      "fullTitle": "FileTreeProvider Advanced Tests Edge Cases and Error Handling should handle invalid URIs gracefully",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle concurrent toggle operations",
+      "fullTitle": "FileTreeProvider Advanced Tests Edge Cases and Error Handling should handle concurrent toggle operations",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle deeply nested paths",
+      "fullTitle": "FileTreeProvider Advanced Tests Edge Cases and Error Handling should handle deeply nested paths",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "selectAll should exist as a method",
+      "fullTitle": "FileTreeProvider Advanced Tests Select All Functionality selectAll should exist as a method",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "selectAll should not throw errors",
+      "fullTitle": "FileTreeProvider Advanced Tests Select All Functionality selectAll should not throw errors",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "selectAll should fire change event",
+      "fullTitle": "FileTreeProvider Advanced Tests Select All Functionality selectAll should fire change event",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "selectAll followed by uncheckAll should work correctly",
+      "fullTitle": "FileTreeProvider Advanced Tests Select All Functionality selectAll followed by uncheckAll should work correctly",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/fileTreeProvider.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getProfiles should retrieve profiles from workspace state",
+      "fullTitle": "ProfileManager Test Suite getProfiles should retrieve profiles from workspace state",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "saveProfile should create a new profile when it does not exist",
+      "fullTitle": "ProfileManager Test Suite saveProfile should create a new profile when it does not exist",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "saveProfile should update an existing profile",
+      "fullTitle": "ProfileManager Test Suite saveProfile should update an existing profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "loadProfile should return the requested profile",
+      "fullTitle": "ProfileManager Test Suite loadProfile should return the requested profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "loadProfile should return undefined for non-existent profile",
+      "fullTitle": "ProfileManager Test Suite loadProfile should return undefined for non-existent profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "deleteProfile should remove the profile and return true if successful",
+      "fullTitle": "ProfileManager Test Suite deleteProfile should remove the profile and return true if successful",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "deleteProfile should return false if profile does not exist",
+      "fullTitle": "ProfileManager Test Suite deleteProfile should return false if profile does not exist",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getChildren should return ProfileItems for each profile",
+      "fullTitle": "ProfileManager Test Suite getChildren should return ProfileItems for each profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 4,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "getTreeItem should return the provided ProfileItem",
+      "fullTitle": "ProfileManager Test Suite getTreeItem should return the provided ProfileItem",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "ProfileItem should have the correct properties",
+      "fullTitle": "ProfileManager Test Suite ProfileItem should have the correct properties",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "renameProfile should rename existing profile successfully",
+      "fullTitle": "ProfileManager Test Suite renameProfile should rename existing profile successfully",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 1,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "renameProfile should return false for non-existent profile",
+      "fullTitle": "ProfileManager Test Suite renameProfile should return false for non-existent profile",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "renameProfile should return false if new name already exists",
+      "fullTitle": "ProfileManager Test Suite renameProfile should return false if new name already exists",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "renameProfile should allow renaming to the same name",
+      "fullTitle": "ProfileManager Test Suite renameProfile should allow renaming to the same name",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/profileManager.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "executeRepomix should return success result with actual execution",
+      "fullTitle": "RepomixRunner Tests executeRepomix should return success result with actual execution",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.test.ts",
+      "duration": 644,
+      "currentRetry": 0,
+      "speed": "slow",
+      "err": {}
+    },
+    {
+      "title": "executeRepomix should handle empty file list",
+      "fullTitle": "RepomixRunner Tests executeRepomix should handle empty file list",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.test.ts",
+      "duration": 613,
+      "currentRetry": 0,
+      "speed": "slow",
+      "err": {}
+    },
+    {
+      "title": "executeRepomix should handle specific file selection",
+      "fullTitle": "RepomixRunner Tests executeRepomix should handle specific file selection",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.test.ts",
+      "duration": 613,
+      "currentRetry": 0,
+      "speed": "slow",
+      "err": {}
+    },
+    {
+      "title": "executeRepomix should generate XML output file",
+      "fullTitle": "RepomixRunner Tests executeRepomix should generate XML output file",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.test.ts",
+      "duration": 637,
+      "currentRetry": 0,
+      "speed": "slow",
+      "err": {}
+    },
+    {
+      "title": "RepomixOptions interface should be correctly structured",
+      "fullTitle": "RepomixRunner Unit Tests RepomixOptions interface should be correctly structured",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "RepomixResult interface should be correctly structured",
+      "fullTitle": "RepomixRunner Unit Tests RepomixResult interface should be correctly structured",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle different file patterns",
+      "fullTitle": "RepomixRunner Unit Tests should handle different file patterns",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle command construction concepts",
+      "fullTitle": "RepomixRunner Unit Tests should handle command construction concepts",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should handle error result structure",
+      "fullTitle": "RepomixRunner Unit Tests should handle error result structure",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    },
+    {
+      "title": "should validate execution time measurement",
+      "fullTitle": "RepomixRunner Unit Tests should validate execution time measurement",
+      "file": "/home/daisuke/projects/repomix-extension/repomix-extension/src/test/unit/repomixRunner.unit.test.ts",
+      "duration": 0,
+      "currentRetry": 0,
+      "speed": "fast",
+      "err": {}
+    }
+  ]
+}

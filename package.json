@@ -31,7 +31,9 @@
     "Developer Tools",
     "Productivity"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:repomixFileExplorer"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
@@ -154,11 +156,16 @@
     "lint": "eslint src",
     "test": "vscode-test",
     "test:unit": "mocha out/test/**/*.test.js --recursive --ui tdd --require ./test-setup.js",
+    "test:coverage": "c8 npm run test:unit",
+    "test:coverage:html": "c8 --reporter=html npm run test:unit",
+    "test:coverage:lcov": "c8 --reporter=lcov npm run test:unit",
+    "test:coverage:nyc": "nyc npm run test:unit",
     "test:mocha": "mocha --config ./mocha.json",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "lint:fix": "eslint src --ext ts,tsx --fix"
   },
   "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
@@ -170,6 +177,7 @@
     "@typescript-eslint/parser": "^8.31.1",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
+    "c8": "^10.1.3",
     "chai": "^4.3.7",
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^8.8.0",
@@ -177,6 +185,7 @@
     "husky": "^8.0.3",
     "lint-staged": "^13.2.2",
     "mocha": "^10.2.0",
+    "nyc": "^17.1.0",
     "prettier": "^2.8.8",
     "sinon": "^15.1.0",
     "ts-loader": "^9.5.2",

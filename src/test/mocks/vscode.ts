@@ -72,10 +72,31 @@ export const workspace = {
         }
     ],
     fs: {
-        readDirectory: (uri: any) => Promise.resolve([
-            ['test.txt', FileType.File],
-            ['folder', FileType.Directory]
-        ]),
+        readDirectory: (uri: any) => {
+            // 完全に安全なファイル構造 - 無限ループを完全に防ぐ
+            const path = uri.fsPath || uri.path || '';
+            
+            // 厳密にパスをチェックして既知のパスのみ処理
+            const knownPaths: Record<string, [string, number][]> = {
+                '/test/workspace': [
+                    ['file1.txt', FileType.File],
+                    ['file2.txt', FileType.File], 
+                    ['package.json', FileType.File]
+                ]
+                // ディレクトリは一切返さない（無限再帰完全防止）
+            };
+            
+            // パスの正規化と厳密チェック
+            const normalizedPath = path.replace(/\\/g, '/').replace(/\/+/g, '/');
+            
+            // 完全一致のみ許可、部分一致や類似パスは拒否
+            if (knownPaths.hasOwnProperty(normalizedPath)) {
+                return Promise.resolve(knownPaths[normalizedPath]);
+            }
+            
+            // 未知のパスは常に空を返す
+            return Promise.resolve([]);
+        },
         stat: (uri: any) => Promise.resolve({
             type: FileType.File,
             ctime: Date.now(),

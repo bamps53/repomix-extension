@@ -1,5 +1,6 @@
 {
-  "require": "ts-node/register",
-  "spec": "src/test/**/*.test.ts",
-  "timeout": 5000
+  "require": ["ts-node/register", "./src/test/test-setup.js"],
+  "spec": "src/test/unit/**/*.test.ts",
+  "timeout": 5000,
+  "ui": "tdd"
 }
