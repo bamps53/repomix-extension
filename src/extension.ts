@@ -264,42 +264,54 @@ export function activate(context: vscode.ExtensionContext) {
       }
       
       try {
-        vscode.window.showInformationMessage('Executing Repomix...');
+        // Use withProgress to show a progress notification
+        await vscode.window.withProgress({
+          location: vscode.ProgressLocation.Notification,
+          title: 'Executing Repomix...',
+          cancellable: false
+        }, async (progress) => {
+          // ワークスペースルートを取得
+          const wsRoot = fileTreeProvider.getWorkspaceRoot();
+          
+          // 選択されたファイルのパス情報を取得
+          const fileInfo = checkedPaths.map(filePath => {
+            // 作業ディレクトリからの相対パスを計算
+            const relativePath = path.relative(wsRoot, filePath);
+            return {
+              fullPath: filePath,
+              relativePath: relativePath
+            };
+          });
 
-        // ワークスペースルートを取得
-        const wsRoot = fileTreeProvider.getWorkspaceRoot();
-        
-        // 選択されたファイルのパス情報を取得
-        const fileInfo = checkedPaths.map(filePath => {
-          // 作業ディレクトリからの相対パスを計算
-          const relativePath = path.relative(wsRoot, filePath);
-          return {
-            fullPath: filePath,
-            relativePath: relativePath
+          // repomix の実行オプションを構築
+          const repomixOptions: RepomixOptions = {
+            files: fileInfo.map(f => f.relativePath),
+            workspaceRoot: wsRoot,
+            additionalOptions: {
+              // 必要に応じて追加オプションを設定可能
+            }
           };
-        });
-
-        // repomix の実行オプションを構築
-        const repomixOptions: RepomixOptions = {
-          files: fileInfo.map(f => f.relativePath),
-          workspaceRoot: wsRoot,
-          additionalOptions: {
-            // 必要に応じて追加オプションを設定可能
+          
+          // repomixを実行して結果を取得
+          const result = await executeRepomix(repomixOptions);
+          
+          // 生成されたXMLファイルを開く
+          await showRepomixResult(repomixOptions);
+          
+          // 実行結果に応じて通知を表示
+          if (result.success) {
+            // Update progress message to show completion
+            progress.report({ 
+              increment: 100, 
+              message: `Completed! Processed ${fileInfo.length} files.` 
+            });
+            
+            // Wait a moment to ensure user sees the success message
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } else {
+            vscode.window.showErrorMessage(`Repomix execution failed: ${result.error}`);
           }
-        };
-        
-        // repomixを実行して結果を取得
-        const result = await executeRepomix(repomixOptions);
-        
-        // 生成されたXMLファイルを開く
-        await showRepomixResult(repomixOptions);
-        
-        // 実行結果に応じて通知を表示
-        if (result.success) {
-          vscode.window.showInformationMessage(`Repomix execution completed. Processed ${fileInfo.length} files.`);
-        } else {
-          vscode.window.showErrorMessage(`Repomix execution failed: ${result.error}`);
-        }
+        });
       } catch (error) {
         console.error('Error executing repomix:', error);
         vscode.window.showErrorMessage(`Failed to execute Repomix: ${error}`);
