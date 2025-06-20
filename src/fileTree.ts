@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { promisify } from 'util';
 import { RepomixConfigUtil } from './repomixConfig';
+import { FileTreeCache } from './cache/FileTreeCache';
 
 /**
  * ファイルシステムエントリを表す型
@@ -31,6 +32,9 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   private context: vscode.ExtensionContext;
   private repomixConfig: RepomixConfigUtil;
   private isTestEnvironment: boolean;
+  private cache: FileTreeCache;
+  private updateDebounceTimer?: NodeJS.Timeout;
+  private pendingUpdates = new Set<string>();
   
   constructor(workspaceRoot: string, context: vscode.ExtensionContext) {
     this.workspaceRoot = workspaceRoot;
@@ -42,11 +46,15 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
                            typeof global !== 'undefined' && global.process?.env?.NODE_ENV === 'test';
     
     this.repomixConfig = new RepomixConfigUtil(workspaceRoot);
+    this.cache = new FileTreeCache();
     
     // 初期化時にrepomix設定を読み込む（テスト環境では無効化）
     if (!this.isTestEnvironment) {
       this.initializeRepomixConfig();
     }
+    
+    // 定期的に期限切れキャッシュをクリーンアップ
+    setInterval(() => this.cache.cleanExpired(), 300000); // 5分ごと
   }
 
   /**
@@ -74,6 +82,9 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     // すべての選択状態をクリア
     this.checkedItems.clear();
     
+    // キャッシュもクリア
+    this.cache.clear();
+    
     // repomix設定を再読み込み
     await this.initializeRepomixConfig();
     
@@ -84,7 +95,54 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   /**
    * 選択状態をクリアせずにツリービューのみ更新する
    */
-  updateView(): void {
+  updateView(element?: FileSystemItem): void {
+    if (element) {
+      // 特定の要素のみ更新
+      this.scheduleUpdate(element);
+    } else {
+      // 全体更新
+      this._onDidChangeTreeData.fire();
+    }
+  }
+  
+  /**
+   * 更新をスケジューリング（デバウンス付き）
+   */
+  private scheduleUpdate(element: FileSystemItem): void {
+    if (!element.resourceUri) {return;}
+    
+    const key = element.resourceUri.toString();
+    this.pendingUpdates.add(key);
+    
+    // 既存のタイマーをクリア
+    if (this.updateDebounceTimer) {
+      clearTimeout(this.updateDebounceTimer);
+    }
+    
+    // 50ms後に一括更新
+    this.updateDebounceTimer = setTimeout(() => {
+      this.processPendingUpdates();
+    }, 50);
+  }
+  
+  /**
+   * 保留中の更新を処理
+   */
+  private processPendingUpdates(): void {
+    if (this.pendingUpdates.size === 0) {return;}
+    
+    // 更新対象の要素を特定
+    const elementsToUpdate = new Set<FileSystemItem>();
+    
+    for (const key of this.pendingUpdates) {
+      const uri = vscode.Uri.parse(key);
+      elementsToUpdate.add({ resourceUri: uri });
+    }
+    
+    // 保留リストをクリア
+    this.pendingUpdates.clear();
+    
+    // 実際の更新を実行（全体更新で簡略化）
     this._onDidChangeTreeData.fire();
   }
 
@@ -102,6 +160,10 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
 
     // 状態の更新
     this.checkedItems.set(key, !isCurrentlyChecked);
+    
+    // キャッシュを無効化
+    this.cache.invalidateDirectory(element.resourceUri);
+    this.cache.invalidateParentDirectories(element.resourceUri);
     
     // アイテムがディレクトリの場合、すべての子アイテムも更新
     if (element.type === vscode.FileType.Directory) {
@@ -145,31 +207,84 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
       
       const entries = await vscode.workspace.fs.readDirectory(directoryUri);
       
-      for (const [name, type] of entries) {
+      // このディレクトリのキャッシュを無効化（子要素が変更されるため）
+      this.cache.invalidateDirectory(directoryUri);
+      
+      // ファイルとディレクトリを分離
+      const files: [string, vscode.FileType][] = [];
+      const directories: [string, vscode.FileType][] = [];
+      
+      for (const entry of entries) {
+        if (entry[1] === vscode.FileType.Directory) {
+          directories.push(entry);
+        } else {
+          files.push(entry);
+        }
+      }
+      
+      // ファイルの処理（並列）
+      const filePromises = files.map(async ([name, type]) => {
         const childUri = vscode.Uri.joinPath(directoryUri, name);
         const filePath = childUri.fsPath;
         
-        // repomixの除外パターンをチェック
-        const shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+        // キャッシュから検証結果を取得
+        let shouldIgnore: boolean;
+        let isValidSize: boolean = true;
         
-        if (!shouldIgnore) {
-          // ファイルサイズもチェック（ファイルの場合のみ）
-          if (type === vscode.FileType.File) {
-            const isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
-            if (!isValidSize) {
-              continue; // ファイルサイズが大きすぎる場合はスキップ
-            }
+        const cached = this.cache.getFileValidation(filePath);
+        if (cached) {
+          shouldIgnore = cached.shouldIgnore;
+          isValidSize = cached.isValidSize;
+        } else {
+          // repomixの除外パターンをチェック
+          shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+          
+          // ファイルサイズもチェック
+          if (!shouldIgnore) {
+            isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
           }
           
+          // キャッシュに保存
+          this.cache.setFileValidation(filePath, shouldIgnore, isValidSize);
+        }
+        
+        if (!shouldIgnore && isValidSize) {
+          const key = childUri.toString();
+          // ファイルの状態を更新
+          this.checkedItems.set(key, checked);
+        }
+      });
+      
+      // ファイルの処理を並列実行
+      await Promise.all(filePromises);
+      
+      // ディレクトリの処理（逐次）
+      for (const [name, type] of directories) {
+        const childUri = vscode.Uri.joinPath(directoryUri, name);
+        const filePath = childUri.fsPath;
+        
+        // キャッシュから検証結果を取得
+        let shouldIgnore: boolean;
+        
+        const cached = this.cache.getFileValidation(filePath);
+        if (cached) {
+          shouldIgnore = cached.shouldIgnore;
+        } else {
+          // repomixの除外パターンをチェック
+          shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+          
+          // キャッシュに保存（ディレクトリはサイズチェック不要）
+          this.cache.setFileValidation(filePath, shouldIgnore, true);
+        }
+        
+        if (!shouldIgnore) {
           const key = childUri.toString();
           
-          // 子アイテムの状態を更新
+          // ディレクトリの状態を更新
           this.checkedItems.set(key, checked);
           
           // 再帰的にサブディレクトリを処理
-          if (type === vscode.FileType.Directory) {
-            await this.updateChildrenCheckState(childUri, checked, visitedPaths);
-          }
+          await this.updateChildrenCheckState(childUri, checked, visitedPaths);
         }
       }
     } catch (error) {
@@ -232,6 +347,9 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
    * 指定されたディレクトリとその子アイテムを再帰的に選択する
    */
   private async selectAllRecursive(directoryUri: vscode.Uri, visitedPaths: Set<string> = new Set()): Promise<void> {
+    // キャッシュを無効化
+    this.cache.invalidateDirectory(directoryUri);
+    
     try {
       const dirPath = directoryUri.fsPath;
       
@@ -261,31 +379,87 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
       
       const entries = await vscode.workspace.fs.readDirectory(directoryUri);
       
-      for (const [name, type] of entries) {
+      // このディレクトリのキャッシュを無効化（子要素が変更されるため）
+      this.cache.invalidateDirectory(directoryUri);
+      
+      // ファイルとディレクトリを分離
+      const files: [string, vscode.FileType][] = [];
+      const directories: [string, vscode.FileType][] = [];
+      
+      for (const entry of entries) {
+        if (entry[1] === vscode.FileType.Directory) {
+          directories.push(entry);
+        } else {
+          files.push(entry);
+        }
+      }
+      
+      // ファイルの処理（並列）
+      const filePromises = files.map(async ([name, type]) => {
         const childUri = vscode.Uri.joinPath(directoryUri, name);
         const filePath = childUri.fsPath;
         
-        // repomixの除外パターンをチェック
-        const shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+        // キャッシュから検証結果を取得
+        let shouldIgnore: boolean;
+        let isValidSize: boolean = true;
+        
+        const cached = this.cache.getFileValidation(filePath);
+        if (cached) {
+          shouldIgnore = cached.shouldIgnore;
+          isValidSize = cached.isValidSize;
+        } else {
+          // repomixの除外パターンをチェック
+          shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+          
+          // ファイルサイズもチェック
+          if (!shouldIgnore) {
+            isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
+          }
+          
+          // キャッシュに保存
+          this.cache.setFileValidation(filePath, shouldIgnore, isValidSize);
+        }
+        
+        if (!shouldIgnore && isValidSize) {
+          const key = childUri.toString();
+          // ファイルを選択状態に設定
+          this.checkedItems.set(key, true);
+        }
+      });
+      
+      // ファイルの処理を並列実行
+      await Promise.all(filePromises);
+      
+      // ディレクトリの処理（逐次）
+      for (const [name, type] of directories) {
+        const childUri = vscode.Uri.joinPath(directoryUri, name);
+        const filePath = childUri.fsPath;
+        
+        // キャッシュから検証結果を取得
+        let shouldIgnore: boolean;
+        
+        const cached = this.cache.getFileValidation(filePath);
+        if (cached) {
+          shouldIgnore = cached.shouldIgnore;
+        } else {
+          // repomixの除外パターンをチェック
+          shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+          
+          // キャッシュに保存（ディレクトリはサイズチェック不要）
+          this.cache.setFileValidation(filePath, shouldIgnore, true);
+        }
         
         if (!shouldIgnore) {
-          // ファイルサイズもチェック（ファイルの場合のみ）
-          if (type === vscode.FileType.File) {
-            const isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
-            if (!isValidSize) {
-              continue; // ファイルサイズが大きすぎる場合はスキップ
-            }
-          }
-          
           const key = childUri.toString();
           
-          // アイテムを選択状態に設定
+          // ディレクトリを選択状態に設定
           this.checkedItems.set(key, true);
           
-          // ディレクトリの場合は再帰的に処理
-          if (type === vscode.FileType.Directory) {
-            await this.selectAllRecursive(childUri, visitedPaths);
-          }
+          // このディレクトリのキャッシュを無効化
+          this.cache.invalidateDirectory(childUri);
+          
+          // 再帰的にサブディレクトリを処理
+          await this.selectAllRecursive(childUri, visitedPaths);
         }
       }
     } catch (error) {
@@ -304,6 +478,10 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     const key = uri.toString();
     
     this.checkedItems.set(key, checked);
+    
+    // キャッシュを無効化
+    this.cache.invalidateDirectory(uri);
+    this.cache.invalidateParentDirectories(uri);
     
     if (fireEvent) {
       // 選択状態をクリアせずにビューのみ更新
@@ -404,21 +582,33 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
       const entries = await vscode.workspace.fs.readDirectory(directoryUri);
       const filteredEntries: FileSystemItem[] = [];
       
-      for (const [name, type] of entries) {
+      // 並列処理のためにPromiseの配列を作成
+      const entryPromises = entries.map(async ([name, type]) => {
         const uri = vscode.Uri.joinPath(directoryUri, name);
         const filePath = uri.fsPath;
         
-        // repomixの除外パターンをチェック
-        const shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+        // キャッシュから検証結果を取得
+        let shouldIgnore: boolean;
+        let isValidSize: boolean = true;
         
-        if (!shouldIgnore) {
+        const cached = this.cache.getFileValidation(filePath);
+        if (cached) {
+          shouldIgnore = cached.shouldIgnore;
+          isValidSize = cached.isValidSize;
+        } else {
+          // repomixの除外パターンをチェック
+          shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+          
           // ファイルサイズもチェック（ファイルの場合のみ）
-          if (type === vscode.FileType.File) {
-            const isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
-            if (!isValidSize) {
-              continue; // ファイルサイズが大きすぎる場合はスキップ
-            }
+          if (!shouldIgnore && type === vscode.FileType.File) {
+            isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
           }
+          
+          // キャッシュに保存
+          this.cache.setFileValidation(filePath, shouldIgnore, isValidSize);
+        }
+        
+        if (!shouldIgnore && isValidSize) {
           
           const key = uri.toString();
           let contextValue: string;
@@ -433,11 +623,22 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
             contextValue = isChecked ? 'checked' : 'unchecked';
           }
           
-          filteredEntries.push({
+          return {
             resourceUri: uri,
             type: type,
             contextValue: contextValue
-          });
+          };
+        }
+        return null;
+      });
+      
+      // すべての処理を並列実行
+      const results = await Promise.all(entryPromises);
+      
+      // nullをフィルターして有効なエントリのみ収集
+      for (const entry of results) {
+        if (entry !== null) {
+          filteredEntries.push(entry);
         }
       }
       
@@ -472,55 +673,91 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
    * @returns 'none' | 'partial' | 'all'
    */
   private async getDirectorySelectionState(directoryUri: vscode.Uri): Promise<'none' | 'partial' | 'all'> {
+    // キャッシュから取得を試みる
+    const cachedState = this.cache.getDirectoryState(directoryUri);
+    if (cachedState !== undefined) {
+      return cachedState;
+    }
+    
     try {
       const entries = await vscode.workspace.fs.readDirectory(directoryUri);
       let checkedCount = 0;
       let totalCount = 0;
       
-      for (const [name, type] of entries) {
+      // 並列処理のための配列を作成
+      const checkPromises = entries.map(async ([name, type]) => {
         const childUri = vscode.Uri.joinPath(directoryUri, name);
         const filePath = childUri.fsPath;
         
-        // repomixの除外パターンをチェック
-        const shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+        // キャッシュから検証結果を取得
+        let shouldIgnore: boolean;
+        let isValidSize: boolean = true;
         
-        if (!shouldIgnore) {
+        const cached = this.cache.getFileValidation(filePath);
+        if (cached) {
+          shouldIgnore = cached.shouldIgnore;
+          isValidSize = cached.isValidSize;
+        } else {
+          // repomixの除外パターンをチェック
+          shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+          
           // ファイルサイズもチェック（ファイルの場合のみ）
-          if (type === vscode.FileType.File) {
-            const isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
-            if (!isValidSize) {
-              continue;
-            }
+          if (!shouldIgnore && type === vscode.FileType.File) {
+            isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
           }
           
-          totalCount++;
+          // キャッシュに保存
+          this.cache.setFileValidation(filePath, shouldIgnore, isValidSize);
+        }
+        
+        if (!shouldIgnore && isValidSize) {
+          
           const key = childUri.toString();
           
           if (type === vscode.FileType.Directory) {
             // サブディレクトリの場合、再帰的にチェック
             const subState = await this.getDirectorySelectionState(childUri);
-            if (subState === 'all') {
-              checkedCount++;
-            } else if (subState === 'partial') {
-              // 部分選択があれば即座に 'partial' を返す
-              return 'partial';
-            }
+            return { isValid: true, isChecked: subState === 'all', isPartial: subState === 'partial' };
           } else {
             // ファイルの場合、チェック状態を確認
-            if (this.checkedItems.get(key)) {
-              checkedCount++;
-            }
+            const isChecked = this.checkedItems.get(key) || false;
+            return { isValid: true, isChecked, isPartial: false };
+          }
+        }
+        
+        return { isValid: false, isChecked: false, isPartial: false };
+      });
+      
+      // すべての処理を並列実行
+      const results = await Promise.all(checkPromises);
+      
+      // 結果を集計
+      for (const result of results) {
+        if (result.isValid) {
+          totalCount++;
+          if (result.isPartial) {
+            // 部分選択があれば即座に 'partial' を返す
+            this.cache.setDirectoryState(directoryUri, 'partial');
+            return 'partial';
+          }
+          if (result.isChecked) {
+            checkedCount++;
           }
         }
       }
       
+      let result: 'none' | 'partial' | 'all';
       if (checkedCount === 0) {
-        return 'none';
+        result = 'none';
       } else if (checkedCount === totalCount) {
-        return 'all';
+        result = 'all';
       } else {
-        return 'partial';
+        result = 'partial';
       }
+      
+      // 結果をキャッシュに保存
+      this.cache.setDirectoryState(directoryUri, result);
+      return result;
     } catch (error) {
       console.error(`Error getting directory selection state: ${error}`);
       return 'none';
