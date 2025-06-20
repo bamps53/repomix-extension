@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import { FileTreeProvider } from './fileTree';
 import { ProfileManager } from './profileManager';
-import { executeRepomix, showRepomixResult, RepomixOptions } from './repomixRunner';
+import { executeRepomix, showRepomixResult, RepomixOptions, getOutputChannel } from './repomixRunner';
 
 import * as path from 'path';
 import * as childProcess from 'child_process';
@@ -307,9 +307,27 @@ export function activate(context: vscode.ExtensionContext) {
             });
             
             // Wait a moment to ensure user sees the success message
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Show success message with action to view logs
+            const action = await vscode.window.showInformationMessage(
+              `Repomix completed successfully! Processed ${fileInfo.length} files in ${result.executionTimeMs}ms.`,
+              'Show Logs'
+            );
+            
+            if (action === 'Show Logs') {
+              getOutputChannel().show();
+            }
           } else {
-            vscode.window.showErrorMessage(`Repomix execution failed: ${result.error}`);
+            // Show error message with action to view logs
+            const action = await vscode.window.showErrorMessage(
+              `Repomix execution failed: ${result.error}`,
+              'Show Logs'
+            );
+            
+            if (action === 'Show Logs') {
+              getOutputChannel().show();
+            }
           }
         });
       } catch (error) {

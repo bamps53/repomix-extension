@@ -5,6 +5,9 @@ import { promisify } from 'util';
 
 const exec = promisify(childProcess.exec);
 
+// Output Channel for repomix logs
+let outputChannel: vscode.OutputChannel | undefined;
+
 /**
  * repomix実行のためのオプション
  */
@@ -40,6 +43,17 @@ export interface RepomixResult {
  * @returns 実行結果
  */
 export async function executeRepomix(options: RepomixOptions): Promise<RepomixResult> {
+  // Create output channel if not exists
+  if (!outputChannel) {
+    outputChannel = vscode.window.createOutputChannel('Repomix');
+  }
+  
+  // Clear previous logs and show new execution
+  outputChannel.clear();
+  outputChannel.appendLine('='.repeat(60));
+  outputChannel.appendLine(`Repomix Execution Started at ${new Date().toLocaleString()}`);
+  outputChannel.appendLine('='.repeat(60));
+  outputChannel.appendLine('');
   const startTime = Date.now();
   
   try {
@@ -56,9 +70,15 @@ export async function executeRepomix(options: RepomixOptions): Promise<RepomixRe
     // Always process the current directory (workspace root)
     const command = `npx repomix ${includeArg} .`;
     
-    console.log(`Executing: ${command}`);
-    console.log(`Working directory: ${options.workspaceRoot}`);
-    console.log(`Include patterns: ${includePatterns.join(', ')}`);
+    // Log command details
+    outputChannel.appendLine('Command Details:');
+    outputChannel.appendLine(`  Command: ${command}`);
+    outputChannel.appendLine(`  Working Directory: ${options.workspaceRoot}`);
+    outputChannel.appendLine(`  Include Patterns: ${includePatterns.join(', ')}`);
+    outputChannel.appendLine(`  Total Files: ${includePatterns.length}`);
+    outputChannel.appendLine('');
+    outputChannel.appendLine('Execution Output:');
+    outputChannel.appendLine('-'.repeat(40));
     
     // Execute repomix CLI with selected files
     const { stdout, stderr } = await exec(command, { 
@@ -66,21 +86,33 @@ export async function executeRepomix(options: RepomixOptions): Promise<RepomixRe
       maxBuffer: 1024 * 1024 * 10 // 10MB buffer for large outputs
     });
     
+    // Log stdout
+    if (stdout) {
+      outputChannel.appendLine(stdout);
+    }
+    
     // Check for stderr warnings but don't fail on them
     if (stderr && stderr.trim()) {
-      console.warn('Repomix stderr output:', stderr);
+      outputChannel.appendLine('');
+      outputChannel.appendLine('Warnings/Errors:');
+      outputChannel.appendLine(stderr);
     }
+    
+    const executionTime = Date.now() - startTime;
+    outputChannel.appendLine('');
+    outputChannel.appendLine('-'.repeat(40));
+    outputChannel.appendLine(`✅ Execution completed successfully`);
+    outputChannel.appendLine(`⏱️  Execution time: ${executionTime}ms`);
+    outputChannel.appendLine(`📁 Output file: repomix-output.xml`);
     
     return {
       success: true,
       output: stdout || 'Repomix executed successfully',
       timestamp: new Date(),
-      executionTimeMs: Date.now() - startTime
+      executionTimeMs: executionTime
     };
   } catch (error) {
     // Error handling
-    console.error('Repomix execution error:', error);
-    
     let errorMessage = 'Unknown error occurred';
     if (error instanceof Error) {
       errorMessage = error.message;
@@ -90,6 +122,13 @@ export async function executeRepomix(options: RepomixOptions): Promise<RepomixRe
       }
     }
     
+    // Log error details
+    outputChannel.appendLine('');
+    outputChannel.appendLine('-'.repeat(40));
+    outputChannel.appendLine(`❌ Execution failed`);
+    outputChannel.appendLine(`Error: ${errorMessage}`);
+    outputChannel.appendLine(`⏱️  Execution time: ${Date.now() - startTime}ms`);
+    
     return {
       success: false,
       output: '',
@@ -98,6 +137,18 @@ export async function executeRepomix(options: RepomixOptions): Promise<RepomixRe
       executionTimeMs: Date.now() - startTime
     };
   }
+}
+
+/**
+ * Get the output channel for showing logs
+ * 
+ * @returns The output channel instance
+ */
+export function getOutputChannel(): vscode.OutputChannel {
+  if (!outputChannel) {
+    outputChannel = vscode.window.createOutputChannel('Repomix');
+  }
+  return outputChannel;
 }
 
 /**
