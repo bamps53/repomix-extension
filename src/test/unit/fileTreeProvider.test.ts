@@ -153,14 +153,14 @@ suite('FileTreeProvider Advanced Tests', () => {
   });
 
   suite('Tree Item Creation', () => {
-    test('getTreeItem should create proper TreeItem for files', () => {
+    test('getTreeItem should create proper TreeItem for files', async () => {
       const fileElement = {
         resourceUri: vscode.Uri.file(path.join(mockWorkspaceRoot, 'test.txt')),
         type: vscode.FileType.File,
         contextValue: 'unchecked'
       };
 
-      const treeItem = fileTreeProvider.getTreeItem(fileElement);
+      const treeItem = await fileTreeProvider.getTreeItem(fileElement);
 
       assert.strictEqual(treeItem.label, 'test.txt');
       assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
@@ -174,14 +174,14 @@ suite('FileTreeProvider Advanced Tests', () => {
       assert.strictEqual(treeItem.contextValue, 'uncheckedFileTreeItem');
     });
 
-    test('getTreeItem should create proper TreeItem for directories', () => {
+    test('getTreeItem should create proper TreeItem for directories', async () => {
       const dirElement = {
         resourceUri: vscode.Uri.file(path.join(mockWorkspaceRoot, 'testfolder')),
         type: vscode.FileType.Directory,
         contextValue: 'checked'
       };
 
-      const treeItem = fileTreeProvider.getTreeItem(dirElement);
+      const treeItem = await fileTreeProvider.getTreeItem(dirElement);
 
       assert.strictEqual(treeItem.label, 'testfolder');
       assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
@@ -191,14 +191,14 @@ suite('FileTreeProvider Advanced Tests', () => {
       assert.strictEqual(treeItem.contextValue, 'checkedFileTreeItem');
     });
 
-    test('getTreeItem should set up toggle command correctly', () => {
+    test('getTreeItem should set up toggle command correctly', async () => {
       const fileElement = {
         resourceUri: vscode.Uri.file(path.join(mockWorkspaceRoot, 'test.txt')),
         type: vscode.FileType.File,
         contextValue: 'unchecked'
       };
 
-      const treeItem = fileTreeProvider.getTreeItem(fileElement);
+      const treeItem = await fileTreeProvider.getTreeItem(fileElement);
 
       assert.ok(treeItem.command);
       assert.strictEqual(treeItem.command.command, 'repomix-extension.toggleChecked');

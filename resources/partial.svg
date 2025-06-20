@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <defs>
+    <mask id="halfMask">
+      <rect x="0" y="0" width="8" height="16" fill="white"/>
+      <rect x="8" y="0" width="8" height="16" fill="black"/>
+    </mask>
+  </defs>
+  <circle cx="8" cy="8" r="6" fill="#F9826C" mask="url(#halfMask)"/>
+  <circle cx="8" cy="8" r="6" fill="none" stroke="#F9826C" stroke-width="1.5"/>
+</svg>

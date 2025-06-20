@@ -147,7 +147,7 @@ suite('FileTreeProvider Tests', () => {
       assert.strictEqual(dirs[0].name, 'folder1');
     });
 
-    test('getTreeItem should create correct icons for different file types', () => {
+    test('getTreeItem should create correct icons for different file types', async () => {
       const fileElement = {
         resourceUri: createMockUri('test.txt'),
         type: vscode.FileType.File,
@@ -160,8 +160,8 @@ suite('FileTreeProvider Tests', () => {
         contextValue: 'checked'
       };
 
-      const fileTreeItem = fileTreeProvider.getTreeItem(fileElement);
-      const dirTreeItem = fileTreeProvider.getTreeItem(dirElement);
+      const fileTreeItem = await fileTreeProvider.getTreeItem(fileElement);
+      const dirTreeItem = await fileTreeProvider.getTreeItem(dirElement);
 
       // ファイルアイコンの確認（カスタムSVGアイコン形式）
       assert.ok(fileTreeItem.iconPath);

@@ -355,12 +355,22 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
         const items = entries.map(([name, type]) => {
           const uri = vscode.Uri.joinPath(directoryUri, name);
           const key = uri.toString();
-          const isChecked = this.checkedItems.get(key) || false;
+          let contextValue: string;
+          
+          if (type === vscode.FileType.Directory) {
+            // ディレクトリ自体がチェックされているか確認
+            const isChecked = this.checkedItems.get(key) || false;
+            contextValue = isChecked ? 'checked' : 'unchecked';
+          } else {
+            // ファイルの場合は通常のチェック状態
+            const isChecked = this.checkedItems.get(key) || false;
+            contextValue = isChecked ? 'checked' : 'unchecked';
+          }
           
           return {
             resourceUri: uri,
             type: type,
-            contextValue: isChecked ? 'checked' : 'unchecked'
+            contextValue: contextValue
           };
         });
         
@@ -411,12 +421,22 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
           }
           
           const key = uri.toString();
-          const isChecked = this.checkedItems.get(key) || false;
+          let contextValue: string;
+          
+          if (type === vscode.FileType.Directory) {
+            // ディレクトリ自体がチェックされているか確認
+            const isChecked = this.checkedItems.get(key) || false;
+            contextValue = isChecked ? 'checked' : 'unchecked';
+          } else {
+            // ファイルの場合は通常のチェック状態
+            const isChecked = this.checkedItems.get(key) || false;
+            contextValue = isChecked ? 'checked' : 'unchecked';
+          }
           
           filteredEntries.push({
             resourceUri: uri,
             type: type,
-            contextValue: isChecked ? 'checked' : 'unchecked'
+            contextValue: contextValue
           });
         }
       }
@@ -448,9 +468,69 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   }
 
   /**
+   * ディレクトリの選択状態を判定する
+   * @returns 'none' | 'partial' | 'all'
+   */
+  private async getDirectorySelectionState(directoryUri: vscode.Uri): Promise<'none' | 'partial' | 'all'> {
+    try {
+      const entries = await vscode.workspace.fs.readDirectory(directoryUri);
+      let checkedCount = 0;
+      let totalCount = 0;
+      
+      for (const [name, type] of entries) {
+        const childUri = vscode.Uri.joinPath(directoryUri, name);
+        const filePath = childUri.fsPath;
+        
+        // repomixの除外パターンをチェック
+        const shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+        
+        if (!shouldIgnore) {
+          // ファイルサイズもチェック（ファイルの場合のみ）
+          if (type === vscode.FileType.File) {
+            const isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
+            if (!isValidSize) {
+              continue;
+            }
+          }
+          
+          totalCount++;
+          const key = childUri.toString();
+          
+          if (type === vscode.FileType.Directory) {
+            // サブディレクトリの場合、再帰的にチェック
+            const subState = await this.getDirectorySelectionState(childUri);
+            if (subState === 'all') {
+              checkedCount++;
+            } else if (subState === 'partial') {
+              // 部分選択があれば即座に 'partial' を返す
+              return 'partial';
+            }
+          } else {
+            // ファイルの場合、チェック状態を確認
+            if (this.checkedItems.get(key)) {
+              checkedCount++;
+            }
+          }
+        }
+      }
+      
+      if (checkedCount === 0) {
+        return 'none';
+      } else if (checkedCount === totalCount) {
+        return 'all';
+      } else {
+        return 'partial';
+      }
+    } catch (error) {
+      console.error(`Error getting directory selection state: ${error}`);
+      return 'none';
+    }
+  }
+
+  /**
    * TreeItemを生成する
    */
-  getTreeItem(element: FileSystemItem): vscode.TreeItem {
+  async getTreeItem(element: FileSystemItem): Promise<vscode.TreeItem> {
     const isDirectory = element.type === vscode.FileType.Directory;
     const isChecked = element.contextValue === 'checked';
     
@@ -468,11 +548,33 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     // URIを設定
     treeItem.resourceUri = element.resourceUri;
 
-    // チェック状態をツールチップに表示
-    treeItem.tooltip = `${fileName} ${isChecked ? '(selected)' : '(not selected)'}`;
-
-    // アイコンの設定 - カスタムSVGアイコンを使用
-    const iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'resources', isChecked ? 'checked.svg' : 'unchecked.svg');
+    // アイコンの設定
+    let iconName: string;
+    
+    if (isDirectory) {
+      // ディレクトリの場合、選択状態を判定
+      const selectionState = await this.getDirectorySelectionState(element.resourceUri);
+      
+      switch (selectionState) {
+        case 'all':
+          iconName = 'checked.svg';
+          treeItem.tooltip = `${fileName} (all selected)`;
+          break;
+        case 'partial':
+          iconName = 'partial.svg';
+          treeItem.tooltip = `${fileName} (partially selected)`;
+          break;
+        default:
+          iconName = 'unchecked.svg';
+          treeItem.tooltip = `${fileName} (not selected)`;
+      }
+    } else {
+      // ファイルの場合
+      iconName = isChecked ? 'checked.svg' : 'unchecked.svg';
+      treeItem.tooltip = `${fileName} ${isChecked ? '(selected)' : '(not selected)'}`;
+    }
+    
+    const iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'resources', iconName);
     
     treeItem.iconPath = {
       light: iconPath,
