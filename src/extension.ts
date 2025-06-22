@@ -3,13 +3,14 @@
 import * as vscode from 'vscode';
 import { FileTreeProvider } from './fileTree';
 import { ProfileManager } from './profileManager';
+import { SearchWebviewProvider } from './searchWebviewProvider';
 import { executeRepomix, showRepomixResult, RepomixOptions, getOutputChannel } from './repomixRunner';
 
 import * as path from 'path';
 import * as childProcess from 'child_process';
 import * as util from 'util';
 
-// プロファイルの型定義
+// Profile type definition
 interface Profile {
   name: string;
   checkedPaths: string[];
@@ -19,29 +20,62 @@ export function activate(context: vscode.ExtensionContext) {
   console.log('🚀 Repomix Extension is now active!');
   console.log('Extension URI:', context.extensionUri.toString());
   
-  // 作業ディレクトリを取得
+  // Get workspace directory
   const workspaceRoot = vscode.workspace.workspaceFolders?.[0].uri.fsPath || '';
   
-  // FileTreeProviderのインスタンスを作成
+  // Create instances of providers
   const fileTreeProvider = new FileTreeProvider(workspaceRoot, context);
-  
-  // ProfileManagerのインスタンスを作成
   const profileManager = new ProfileManager(context);
+  const searchWebviewProvider = new SearchWebviewProvider(context);
   
-  // ファイルツリービューの登録
-  vscode.window.registerTreeDataProvider('repomixFileExplorer', fileTreeProvider);
+  // Connect search provider with file tree
+  searchWebviewProvider.setOnSearchChange((query) => {
+    fileTreeProvider.setSearchQuery(query);
+  });
   
-  // プロファイル管理ビューの登録
+  // Register search webview
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      SearchWebviewProvider.viewType,
+      searchWebviewProvider
+    )
+  );
+  
+  // Register file tree view
+  const treeView = vscode.window.createTreeView('repomixFileExplorer', {
+    treeDataProvider: fileTreeProvider,
+    showCollapseAll: true
+  });
+  
+  // Update title based on search state
+  const updateTreeTitle = () => {
+    const query = fileTreeProvider.getSearchQuery();
+    if (query) {
+      treeView.title = `File Tree (${query})`;
+    } else {
+      treeView.title = 'File Tree';
+    }
+  };
+  
+  // Set initial title
+  updateTreeTitle();
+  
+  // Update title when tree is updated
+  fileTreeProvider.onDidChangeTreeData(() => {
+    updateTreeTitle();
+  });
+  
+  // Register profile manager view
   vscode.window.registerTreeDataProvider('repomixProfiles', profileManager);
 
-  // トグルコマンドを登録
+  // Register toggle command
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.toggleChecked', (item: any) => {
       fileTreeProvider.toggleChecked(item);
     })
   );
 
-  // リフレッシュコマンドを登録
+  // Register refresh command
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.refresh', async () => {
       await fileTreeProvider.refresh();
@@ -49,15 +83,29 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // Select Allコマンドを登録
+  // Register Select All command
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.selectAll', async () => {
       await fileTreeProvider.selectAll();
-      vscode.window.showInformationMessage('All files and folders selected');
+      const query = fileTreeProvider.getSearchQuery();
+      if (query) {
+        vscode.window.showInformationMessage(`All files matching "${query}" selected`);
+      } else {
+        vscode.window.showInformationMessage('All files and folders selected');
+      }
+    })
+  );
+  
+  
+  // Register search clear command
+  context.subscriptions.push(
+    vscode.commands.registerCommand('repomix-extension.clearSearch', () => {
+      fileTreeProvider.setSearchQuery('');
+      vscode.window.showInformationMessage('Search filter cleared');
     })
   );
 
-  // プロファイル保存コマンドの登録
+  // Register save profile command
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.saveProfile', async () => {
       const profileName = await vscode.window.showInputBox({
@@ -66,10 +114,10 @@ export function activate(context: vscode.ExtensionContext) {
       });
 
       if (profileName) {
-        // 選択されたファイルパスを取得
+        // Get selected file paths
         const checkedItems = fileTreeProvider.getCheckedItems();
         
-        // ProfileManagerを使用してプロファイルを保存
+        // Save profile using ProfileManager
         const savedProfile = profileManager.saveProfile(profileName, checkedItems);
         
         vscode.window.showInformationMessage(`Profile "${profileName}" saved successfully.`);
@@ -78,16 +126,16 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
 
-  // プロファイル読み込みコマンドの登録（従来のコマンド維持）
+  // Register load profile command (maintain legacy command)
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.loadProfile', async (profileItem?: any) => {
       let profileName: string | undefined;
       
-      // TreeViewからの呼び出しかどうかを判定
+      // Check if called from TreeView
       if (profileItem && profileItem.profile && profileItem.profile.name) {
         profileName = profileItem.profile.name;
       } else {
-        // 保存されているプロファイル一覧を取得
+        // Get saved profile list
         const profiles = profileManager.getProfiles();
         
         if (profiles.length === 0) {
@@ -95,7 +143,7 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
         
-        // プロファイルを選択
+        // Select profile
         const selectedProfileItem = await vscode.window.showQuickPick(
           profiles.map(p => ({ 
             label: p.name,
@@ -112,19 +160,19 @@ export function activate(context: vscode.ExtensionContext) {
       }
       
       if (profileName) {
-        // 選択されたプロファイルを読み込み
+        // Load selected profile
         const profile = profileManager.loadProfile(profileName);
         
         if (profile) {
-          // ファイルツリーの選択状態をリセット
+          // Reset file tree selection state
           fileTreeProvider.uncheckAll();
           
-          // 保存されていたパスを選択状態に設定
+          // Set saved paths to selected state
           for (const path of profile.paths) {
             fileTreeProvider.setChecked(path, true, false);
           }
           
-          // ツリービューを更新（選択状態をクリアしない）
+          // Update tree view (without clearing selection state)
           fileTreeProvider.updateView();
           
           vscode.window.showInformationMessage(`Profile "${profileName}" loaded successfully.`);
@@ -133,16 +181,16 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // プロファイルリネームコマンドの登録
+  // Register profile rename command
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.renameProfile', async (profileItem?: any) => {
       let profileName: string | undefined;
       
-      // TreeViewからの呼び出しかどうかを判定
+      // Check if called from TreeView
       if (profileItem && profileItem.profile && profileItem.profile.name) {
         profileName = profileItem.profile.name;
       } else {
-        // 保存されているプロファイル一覧を取得
+        // Get saved profile list
         const profiles = profileManager.getProfiles();
         
         if (profiles.length === 0) {
@@ -150,7 +198,7 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
         
-        // リネームするプロファイルを選択
+        // Select profile to rename
         const selectedProfileItem = await vscode.window.showQuickPick(
           profiles.map(p => ({ 
             label: p.name,
@@ -167,7 +215,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       
       if (profileName) {
-        // 新しい名前を入力
+        // Enter new name
         const newName = await vscode.window.showInputBox({
           title: 'Rename Profile',
           placeHolder: 'Enter new profile name',
@@ -200,16 +248,16 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // プロファイル削除コマンドの登録
+  // Register profile delete command
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.deleteProfile', async (profileItem?: any) => {
       let profileName: string | undefined;
       
-      // TreeViewからの呼び出しかどうかを判定
+      // Check if called from TreeView
       if (profileItem && profileItem.profile && profileItem.profile.name) {
         profileName = profileItem.profile.name;
       } else {
-        // 保存されているプロファイル一覧を取得
+        // Get saved profile list
         const profiles = profileManager.getProfiles();
         
         if (profiles.length === 0) {
@@ -217,7 +265,7 @@ export function activate(context: vscode.ExtensionContext) {
           return;
         }
         
-        // 削除するプロファイルを選択
+        // Select profile to delete
         const selectedProfileItem = await vscode.window.showQuickPick(
           profiles.map(p => ({ 
             label: p.name,
@@ -234,7 +282,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       
       if (profileName) {
-        // 確認ダイアログを表示
+        // Show confirmation dialog
         const confirmed = await vscode.window.showWarningMessage(
           `Delete profile "${profileName}"?`, 
           { modal: true },
@@ -242,7 +290,7 @@ export function activate(context: vscode.ExtensionContext) {
         );
         
         if (confirmed === 'Delete') {
-          // ProfileManagerを使用してプロファイルを削除
+          // Delete profile using ProfileManager
           const deleted = profileManager.deleteProfile(profileName);
           
           if (deleted) {
@@ -253,7 +301,7 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  // repomix実行コマンドの登録
+  // Register repomix execution command
   context.subscriptions.push(
     vscode.commands.registerCommand('repomix-extension.executeRepomix', async () => {
       const checkedPaths = fileTreeProvider.getCheckedItems();
@@ -270,12 +318,12 @@ export function activate(context: vscode.ExtensionContext) {
           title: 'Executing Repomix...',
           cancellable: false
         }, async (progress) => {
-          // ワークスペースルートを取得
+          // Get workspace root
           const wsRoot = fileTreeProvider.getWorkspaceRoot();
           
-          // 選択されたファイルのパス情報を取得
+          // Get path information for selected files
           const fileInfo = checkedPaths.map(filePath => {
-            // 作業ディレクトリからの相対パスを計算
+            // Calculate relative path from working directory
             const relativePath = path.relative(wsRoot, filePath);
             return {
               fullPath: filePath,
@@ -283,22 +331,22 @@ export function activate(context: vscode.ExtensionContext) {
             };
           });
 
-          // repomix の実行オプションを構築
+          // Build repomix execution options
           const repomixOptions: RepomixOptions = {
             files: fileInfo.map(f => f.relativePath),
             workspaceRoot: wsRoot,
             additionalOptions: {
-              // 必要に応じて追加オプションを設定可能
+              // Additional options can be set if needed
             }
           };
           
-          // repomixを実行して結果を取得
+          // Execute repomix and get results
           const result = await executeRepomix(repomixOptions);
           
-          // 生成されたXMLファイルを開く
+          // Open generated XML file
           await showRepomixResult(repomixOptions);
           
-          // 実行結果に応じて通知を表示
+          // Show notification based on execution result
           if (result.success) {
             // Update progress message to show completion
             progress.report({ 

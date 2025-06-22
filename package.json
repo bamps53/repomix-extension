@@ -48,6 +48,12 @@
     "views": {
       "repomix-controller": [
         {
+          "id": "repomixSearchWebview",
+          "type": "webview",
+          "name": "Search",
+          "visibility": "visible"
+        },
+        {
           "id": "repomixFileExplorer",
           "name": "File Tree",
           "visibility": "visible"
@@ -59,6 +65,7 @@
         }
       ]
     },
+    "keybindings": [],
     "commands": [
       {
         "command": "repomix-extension.refresh",
@@ -100,6 +107,12 @@
         "command": "repomix-extension.executeRepomix",
         "title": "Execute Repomix",
         "icon": "$(play)",
+        "category": "Repomix"
+      },
+      {
+        "command": "repomix-extension.clearSearch",
+        "title": "Clear Search",
+        "icon": "$(clear-all)",
         "category": "Repomix"
       }
     ],

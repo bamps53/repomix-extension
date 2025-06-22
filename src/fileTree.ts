@@ -6,7 +6,7 @@ import { RepomixConfigUtil } from './repomixConfig';
 import { FileTreeCache } from './cache/FileTreeCache';
 
 /**
- * ファイルシステムエントリを表す型
+ * Type representing a file system entry
  */
 export interface FileSystemItem {
   resourceUri: vscode.Uri;
@@ -15,8 +15,8 @@ export interface FileSystemItem {
 }
 
 /**
- * ファイルツリープロバイダー
- * ワークスペース内のファイル構造を表示し、選択状態を管理します
+ * File tree provider
+ * Displays file structure in workspace and manages selection state
  */
 export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<FileSystemItem | undefined | null | void> = 
@@ -25,7 +25,7 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   readonly onDidChangeTreeData: vscode.Event<FileSystemItem | undefined | null | void> = 
     this._onDidChangeTreeData.event;
 
-  // 選択されたアイテムを保持する内部マップ
+  // Internal map to hold selected items
   private checkedItems = new Map<string, boolean>();
 
   private workspaceRoot: string;
@@ -36,11 +36,16 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   private updateDebounceTimer?: NodeJS.Timeout;
   private pendingUpdates = new Set<string>();
   
+  // Search filter related
+  private searchQuery: string = '';
+  private searchRegex: RegExp | null = null;
+  private filteredFileCache = new Map<string, FileSystemItem[]>();
+  
   constructor(workspaceRoot: string, context: vscode.ExtensionContext) {
     this.workspaceRoot = workspaceRoot;
     this.context = context;
     
-    // テスト環境検知
+    // Test environment detection
     this.isTestEnvironment = workspaceRoot.includes('/test/') || 
                            process.env.NODE_ENV === 'test' ||
                            typeof global !== 'undefined' && global.process?.env?.NODE_ENV === 'test';
@@ -48,17 +53,17 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     this.repomixConfig = new RepomixConfigUtil(workspaceRoot);
     this.cache = new FileTreeCache();
     
-    // 初期化時にrepomix設定を読み込む（テスト環境では無効化）
+    // Load repomix config on initialization (disabled in test environment)
     if (!this.isTestEnvironment) {
       this.initializeRepomixConfig();
     }
     
-    // 定期的に期限切れキャッシュをクリーンアップ
-    setInterval(() => this.cache.cleanExpired(), 300000); // 5分ごと
+    // Periodically clean expired cache
+    setInterval(() => this.cache.cleanExpired(), 300000); // Every 5 minutes
   }
 
   /**
-   * Repomix設定を初期化する
+   * Initialize Repomix configuration
    */
   private async initializeRepomixConfig(): Promise<void> {
     try {
@@ -69,44 +74,45 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   }
   
   /**
-   * ワークスペースのルートパスを取得する
+   * Get workspace root path
    */
   getWorkspaceRoot(): string {
     return this.workspaceRoot;
   }
 
   /**
-   * ファイルツリーをリフレッシュし、すべての選択状態をリセットする
+   * Refresh file tree and reset all selection states
    */
   async refresh(): Promise<void> {
-    // すべての選択状態をクリア
+    // Clear all selection states
     this.checkedItems.clear();
     
-    // キャッシュもクリア
+    // Clear cache
     this.cache.clear();
+    this.filteredFileCache.clear();
     
-    // repomix設定を再読み込み
+    // Reload repomix configuration
     await this.initializeRepomixConfig();
     
-    // ツリービューを更新
+    // Update tree view
     this._onDidChangeTreeData.fire();
   }
 
   /**
-   * 選択状態をクリアせずにツリービューのみ更新する
+   * Update tree view without clearing selection state
    */
   updateView(element?: FileSystemItem): void {
     if (element) {
-      // 特定の要素のみ更新
+      // Update specific element only
       this.scheduleUpdate(element);
     } else {
-      // 全体更新
+      // Update all
       this._onDidChangeTreeData.fire();
     }
   }
   
   /**
-   * 更新をスケジューリング（デバウンス付き）
+   * Schedule update with debouncing
    */
   private scheduleUpdate(element: FileSystemItem): void {
     if (!element.resourceUri) {return;}
@@ -114,12 +120,12 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     const key = element.resourceUri.toString();
     this.pendingUpdates.add(key);
     
-    // 既存のタイマーをクリア
+    // Clear existing timer
     if (this.updateDebounceTimer) {
       clearTimeout(this.updateDebounceTimer);
     }
     
-    // 50ms後に一括更新
+    // Batch update after 50ms
     this.updateDebounceTimer = setTimeout(() => {
       this.processPendingUpdates();
     }, 50);
@@ -332,14 +338,176 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   }
 
   /**
-   * すべてのファイルとフォルダを選択する
+   * Set search query and filter file tree
+   */
+  setSearchQuery(query: string): void {
+    this.searchQuery = query.trim();
+    
+    if (this.searchQuery) {
+      // Convert VS Code search pattern to regex
+      try {
+        this.searchRegex = this.convertSearchQueryToRegex(this.searchQuery);
+      } catch (error) {
+        console.error('Invalid search pattern:', error);
+        this.searchRegex = null;
+      }
+    } else {
+      this.searchRegex = null;
+    }
+    
+    // Clear filter cache
+    this.filteredFileCache.clear();
+    
+    // Update tree view
+    this._onDidChangeTreeData.fire();
+  }
+  
+  /**
+   * Get current search query
+   */
+  getSearchQuery(): string {
+    return this.searchQuery;
+  }
+  
+  
+  /**
+   * Convert VS Code style search query to regex
+   */
+  private convertSearchQueryToRegex(query: string): RegExp {
+    // Escape special characters except * and /
+    let pattern = query.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Convert wildcards (* -> .*)
+    pattern = pattern.replace(/\*/g, '.*');
+    
+    // Case insensitive
+    return new RegExp(pattern, 'i');
+  }
+  
+  /**
+   * Check if file path matches search query
+   */
+  private matchesSearchQuery(filePath: string): boolean {
+    if (!this.searchRegex) {
+      return true;
+    }
+    
+    // Get relative path from workspace root for full path matching
+    const relativePath = path.relative(this.workspaceRoot, filePath).replace(/\\/g, '/');
+    const fileName = path.basename(filePath);
+    
+    // Check if query contains path separator
+    if (this.searchQuery.includes('/')) {
+      // Match against relative path for directory searches like "app/"
+      return this.searchRegex.test(relativePath);
+    } else {
+      // Match against filename only for simple searches
+      return this.searchRegex.test(fileName);
+    }
+  }
+  
+  /**
+   * すべてのファイルとフォルダを選択する（フィルタ適用）
    */
   async selectAll(): Promise<void> {
     try {
-      await this.selectAllRecursive(vscode.Uri.file(this.workspaceRoot));
+      if (this.searchQuery) {
+        // フィルタが適用されている場合は、表示されているアイテムのみ選択
+        await this.selectFilteredItems(vscode.Uri.file(this.workspaceRoot));
+      } else {
+        // フィルタが適用されていない場合は、すべてのアイテムを選択
+        await this.selectAllRecursive(vscode.Uri.file(this.workspaceRoot));
+      }
       this.updateView();
     } catch (error) {
       console.error('Error selecting all items:', error);
+    }
+  }
+  
+  /**
+   * フィルタリングされたアイテムのみを選択する
+   */
+  private async selectFilteredItems(directoryUri: vscode.Uri, visitedPaths: Set<string> = new Set()): Promise<void> {
+    try {
+      const dirPath = directoryUri.fsPath;
+      
+      // 循環参照防止
+      if (visitedPaths.has(dirPath)) {
+        return;
+      }
+      visitedPaths.add(dirPath);
+      
+      const entries = await vscode.workspace.fs.readDirectory(directoryUri);
+      
+      for (const [name, type] of entries) {
+        const childUri = vscode.Uri.joinPath(directoryUri, name);
+        const filePath = childUri.fsPath;
+        
+        // repomixの除外パターンをチェック
+        const shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+        if (shouldIgnore) {
+          continue;
+        }
+        
+        if (type === vscode.FileType.File) {
+          // Select only if file matches search
+          if (this.matchesSearchQuery(filePath)) {
+            const isValidSize = await this.repomixConfig.isFileSizeValid(filePath);
+            if (isValidSize) {
+              const key = childUri.toString();
+              this.checkedItems.set(key, true);
+            }
+          }
+        } else if (type === vscode.FileType.Directory) {
+          // If directory path matches or contains matching files
+          const hasMatchingFiles = await this.directoryHasMatchingFiles(childUri);
+          if (hasMatchingFiles) {
+            const key = childUri.toString();
+            this.checkedItems.set(key, true);
+            // 再帰的に処理
+            await this.selectFilteredItems(childUri, visitedPaths);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error selecting filtered items in directory ${directoryUri.fsPath}: ${error}`);
+    }
+  }
+  
+  /**
+   * Check if directory contains files matching the search query
+   */
+  private async directoryHasMatchingFiles(directoryUri: vscode.Uri): Promise<boolean> {
+    try {
+      const entries = await vscode.workspace.fs.readDirectory(directoryUri);
+      
+      for (const [name, type] of entries) {
+        const childUri = vscode.Uri.joinPath(directoryUri, name);
+        const filePath = childUri.fsPath;
+        
+        // repomixの除外パターンをチェック
+        const shouldIgnore = await this.repomixConfig.shouldIgnoreFile(filePath);
+        if (shouldIgnore) {
+          continue;
+        }
+        
+        if (type === vscode.FileType.File) {
+          if (this.matchesSearchQuery(filePath)) {
+            return true;
+          }
+        } else if (type === vscode.FileType.Directory) {
+          // 再帰的にチェック
+          const hasMatching = await this.directoryHasMatchingFiles(childUri);
+          if (hasMatching) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.error(`Error checking directory for matching files: ${error}`);
+      return false;
     }
   }
 
@@ -495,14 +663,14 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   async getChildren(element?: FileSystemItem): Promise<FileSystemItem[]> {
     try {
       if (!element) {
-        // ルートレベルの場合、設定されたワークスペースルートを使用
+        // Root level
         if (!this.workspaceRoot) {
           return [];
         }
-
+        
         return this.getFilesInDirectory(vscode.Uri.file(this.workspaceRoot));
       } else {
-        // 子要素の場合、そのディレクトリの中身を返す
+        // Child elements - return directory contents
         if (element.resourceUri) {
           return this.getFilesInDirectory(element.resourceUri);
         }
@@ -518,6 +686,15 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
    * 指定されたディレクトリ内のファイルとフォルダを取得する
    */
   private async getFilesInDirectory(directoryUri: vscode.Uri): Promise<FileSystemItem[]> {
+    // フィルタが適用されている場合、キャッシュをチェック
+    if (this.searchQuery) {
+      const cacheKey = directoryUri.toString();
+      const cached = this.filteredFileCache.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+    
     try {
       const dirPath = directoryUri.fsPath;
       
@@ -642,8 +819,37 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
         }
       }
       
+      // 検索フィルタを適用
+      let finalEntries = filteredEntries;
+      if (this.searchQuery) {
+        finalEntries = [];
+        
+        for (const item of filteredEntries) {
+          const filePath = item.resourceUri.fsPath;
+          
+          if (item.type === vscode.FileType.File) {
+            // ファイルの場合、検索にマッチするかチェック
+            if (this.matchesSearchQuery(filePath)) {
+              finalEntries.push(item);
+            }
+          } else if (item.type === vscode.FileType.Directory) {
+            // For directories, check if:
+            // 1. Directory path itself matches the search pattern, OR
+            // 2. Directory contains matching files
+            if (this.matchesSearchQuery(filePath)) {
+              finalEntries.push(item);
+            } else {
+              const hasMatchingFiles = await this.directoryHasMatchingFiles(item.resourceUri);
+              if (hasMatchingFiles) {
+                finalEntries.push(item);
+              }
+            }
+          }
+        }
+      }
+      
       // VS Codeのデフォルトの並び順に従って、フォルダを先に、次にファイルを表示
-      filteredEntries.sort((a, b) => {
+      finalEntries.sort((a, b) => {
         // まず、フォルダとファイルを分ける
         const aIsDirectory = a.type === vscode.FileType.Directory;
         const bIsDirectory = b.type === vscode.FileType.Directory;
@@ -661,7 +867,13 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
         return aName.localeCompare(bName);
       });
       
-      return filteredEntries;
+      // フィルタ適用時はキャッシュに保存
+      if (this.searchQuery) {
+        const cacheKey = directoryUri.toString();
+        this.filteredFileCache.set(cacheKey, finalEntries);
+      }
+      
+      return finalEntries;
     } catch (error) {
       console.error(`Error reading directory ${directoryUri.fsPath}: ${error}`);
       return [];
@@ -765,7 +977,7 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
   }
 
   /**
-   * TreeItemを生成する
+   * Generate TreeItem
    */
   async getTreeItem(element: FileSystemItem): Promise<vscode.TreeItem> {
     const isDirectory = element.type === vscode.FileType.Directory;
@@ -774,9 +986,12 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     // ファイル名を取得
     const fileName = path.basename(element.resourceUri.fsPath);
     
+    // Use fileName as display name
+    const displayName = fileName;
+    
     // TreeItemを生成
     const treeItem = new vscode.TreeItem(
-      fileName,
+      displayName,
       isDirectory 
         ? vscode.TreeItemCollapsibleState.Collapsed 
         : vscode.TreeItemCollapsibleState.None

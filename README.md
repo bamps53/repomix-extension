@@ -1,124 +1,122 @@
 # Repomix Controller
 
-Repomix Controller は、repomix CLI ツールのための VSCode 拡張機能です。ファイル選択状態の管理、プロファイルによる選択状態の保存/読み込み、そして選択されたファイルに対する repomix コマンドの実行を視覚的に行うことができます。
+Repomix Controller is a VSCode extension for the repomix CLI tool. It provides a visual interface for managing file selection states, saving/loading selection states with profiles, and executing repomix commands on selected files.
 
-## 主な機能
+## Key Features
 
-### ファイルツリービュー
-- ワークスペース内のファイルをツリー形式で表示
-- チェックボックス付きのファイル選択インターフェース
-- ディレクトリの再帰的選択をサポート
-- カスタムアイコンによる視覚的表示
+### File Tree View
+- Display workspace files in a tree format
+- File selection interface with checkboxes
+- Support for recursive directory selection
+- Visual display with custom icons
 
-### プロファイル管理
-- 選択したファイルの状態をプロファイルとして保存
-- 保存したプロファイルの読み込み
-- プロファイルの削除・リネーム機能
-- 専用のプロファイル管理ビューで一覧表示
-- 右クリックメニューからのプロファイル操作
+### Profile Management
+- Save selected file states as profiles
+- Load saved profiles
+- Delete and rename profile functionality
+- Dedicated profile management view with list display
+- Profile operations via right-click context menu
 
-### repomix 実行
-- 選択したファイルリストに対して repomix を実行
-- 実際の npx repomix コマンドを使用した実行
-- 生成された repomix-output.xml ファイルの自動表示
-- 実行時間の測定と結果表示
+### Repomix Execution
+- Execute repomix on the selected file list
+- Uses actual npx repomix command execution
+- Automatic display of generated repomix-output.xml file
+- Execution time measurement and result display
 
-## 必要条件
+## Requirements
 
-- Visual Studio Code 1.74.0 以上
-- Node.js 16.x 以上
-- repomix CLI ツール（`npm install -g repomix` でインストール）
+- Visual Studio Code 1.74.0 or higher
+- Node.js 16.x or higher
+- repomix CLI tool (install with `npm install -g repomix`)
 
-## 使い方
+## Usage
 
-### インストールと初期設定
-1. 拡張機能をインストール後、repomix CLI ツールをインストール：
+### Installation and Initial Setup
+1. After installing the extension, install the repomix CLI tool:
    ```bash
    npm install -g repomix
    ```
-2. VSCode のアクティビティバーから Repomix アイコンをクリック
-3. File Tree と Profiles の2つのビューが表示されます
+2. Click the Repomix icon in the VSCode activity bar
+3. Two views will be displayed: File Tree and Profiles
 
-### ファイル選択
-1. **File Tree** ビューでワークスペース内のファイルを表示
-2. ファイルやフォルダをクリックしてチェックボックスで選択
-3. フォルダを選択すると、その中のすべてのファイルが再帰的に選択される
-4. 選択状態は視覚的にアイコンで表示されます
+### File Selection
+1. The **File Tree** view displays files in your workspace
+2. Click files or folders to select them with checkboxes
+3. Selecting a folder recursively selects all files within it
+4. Selection states are visually indicated with icons
 
-### プロファイル管理
-1. ファイル選択後、File Tree ビュー上部の「Save Profile」ボタン（+）をクリック
-2. プロファイル名を入力して保存
-3. 保存したプロファイルは **Profiles** ビューに表示される
-4. プロファイルの操作：
-   - **読み込み**: プロファイルをクリックまたは右クリック→「Load Profile」
-   - **リネーム**: 右クリック→「Rename Profile」
-   - **削除**: 右クリック→「Delete Profile」
+### Profile Management
+1. After selecting files, click the "Save Profile" button (+) at the top of the File Tree view
+2. Enter a profile name and save
+3. Saved profiles are displayed in the **Profiles** view
+4. Profile operations:
+   - **Load**: Click the profile or right-click → "Load Profile"
+   - **Rename**: Right-click → "Rename Profile"
+   - **Delete**: Right-click → "Delete Profile"
 
-### repomix の実行
-1. ファイル選択後、File Tree ビュー上部の実行ボタン（▶）をクリック
-2. または、コマンドパレット（`Ctrl+Shift+P`）から「Execute Repomix」を選択
-3. 選択されたファイルに対して repomix が実行される
-4. 生成された `repomix-output.xml` ファイルが自動で開かれる
-5. 実行時間と処理結果がステータスバーに表示される
+### Running Repomix
+1. After selecting files, click the run button (▶) at the top of the File Tree view
+2. Or, select "Execute Repomix" from the Command Palette (`Ctrl+Shift+P`)
+3. Repomix will be executed on the selected files
+4. The generated `repomix-output.xml` file will open automatically
+5. Execution time and processing results are displayed in the status bar
 
-## 利用可能なコマンド
+## Available Commands
 
-拡張機能では以下のコマンドが利用できます：
+The following commands are available in the extension:
 
-- `repomix-extension.refresh` - ファイルツリーを更新
-- `repomix-extension.executeRepomix` - 選択したファイルでRepomixを実行
-- `repomix-extension.saveProfile` - 現在の選択状態をプロファイルとして保存
-- `repomix-extension.loadProfile` - プロファイルを読み込み
-- `repomix-extension.renameProfile` - プロファイル名を変更
-- `repomix-extension.deleteProfile` - プロファイルを削除
-- `repomix-extension.toggleChecked` - ファイル/フォルダの選択状態を切り替え
+- `repomix-extension.refresh` - Refresh the file tree
+- `repomix-extension.executeRepomix` - Execute Repomix with selected files
+- `repomix-extension.saveProfile` - Save current selection state as a profile
+- `repomix-extension.loadProfile` - Load a profile
+- `repomix-extension.renameProfile` - Rename a profile
+- `repomix-extension.deleteProfile` - Delete a profile
+- `repomix-extension.toggleChecked` - Toggle file/folder selection state
 
-## 既知の問題
+## Known Issues
 
-- 非常に大きなディレクトリ構造でのパフォーマンス低下の可能性
-- repomix CLI ツールがインストールされていない場合のエラーハンドリング
+- Potential performance degradation with very large directory structures
+- Error handling when repomix CLI tool is not installed
 
-## リリースノート
+## Release Notes
 
 ### 0.0.1
 
-初回リリース
-- ファイルツリービューとチェックボックス選択
-- プロファイル管理（保存/読み込み/削除/リネーム）
-- 実際の repomix CLI との統合
-- 専用プロファイル管理ビュー
-- 包括的なテストスイート（49テスト）
-- GitHub Actions CI/CD パイプライン
+Initial release
+- File tree view with checkbox selection
+- Profile management (save/load/delete/rename)
+- Integration with actual repomix CLI
+- Dedicated profile management view
+- Comprehensive test suite (49 tests)
+- GitHub Actions CI/CD pipeline
 
 ---
 
-## 開発情報
+## Development Information
 
-### 技術スタック
+### Technology Stack
 - TypeScript 5.8+
 - VSCode Extension API 1.74+
-- Webpack（バンドル）
-- Mocha, Chai, Sinon（テスト）
+- Webpack (bundling)
+- Mocha, Chai, Sinon (testing)
 
-### アーキテクチャ
-- `extension.ts`: 拡張機能のエントリーポイントとコマンド登録
-- `fileTree.ts`: ファイルシステムツリービュープロバイダー
-- `profileManager.ts`: プロファイル保存・管理機能
-- `repomixRunner.ts`: repomixコマンド実行とXMLファイル処理
+### Architecture
+- `extension.ts`: Extension entry point and command registration
+- `fileTree.ts`: File system tree view provider
+- `profileManager.ts`: Profile save and management functionality
+- `repomixRunner.ts`: Repomix command execution and XML file processing
 
-### テスト構成
-- `npm run test:unit` - 単体テスト（49テスト）
-- `npm test` - VS Code統合テスト
-- 実際のrepomix実行を含むテスト
-- CI環境での自動テスト実行
+### Test Configuration
+- `npm run test:unit` - Unit tests (49 tests)
+- `npm test` - VS Code integration tests
+- Tests include actual repomix execution
+- Automated test execution in CI environment
 
-## 詳細情報
+## More Information
 
-* [VSCode 拡張機能開発ドキュメント](https://code.visualstudio.com/api)
-* [GitHub リポジトリ](https://github.com/yourusername/repomix-extension)
+* [VSCode Extension Development Documentation](https://code.visualstudio.com/api)
+* [GitHub Repository](https://github.com/bamps53/repomix-extension)
 
-## ライセンス
+## License
 
 MIT
-
-**Repomix Controller をお楽しみください！**
