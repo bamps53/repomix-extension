@@ -53,6 +53,7 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
   private _getHtmlForWebview(webview: vscode.Webview) {
     const nonce = getNonce();
 
+    // The new HTML with improved CSS for minimizing vertical space
     return `<!DOCTYPE html>
       <html lang="en">
       <head>
@@ -61,51 +62,67 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
         <title>Search Files</title>
         <style>
-          html {
-            height: 32px;
-            overflow: hidden;
+          /* Define height variables for easy adjustment */
+          :root {
+            --input-height: 24px;
           }
-          body {
-            padding: 0;
+
+          /* Make html, body cover the entire webview area and match the sidebar background */
+          html, body {
+            height: 100%;
+            width: 100%;
             margin: 0;
-            background: transparent;
-            height: 32px;
+            padding: 0;
             overflow: hidden;
-            display: flex;
-            align-items: center;
+            background-color: var(--vscode-sideBar-background);
           }
+
+          /* Position the content at the top of the container */
+          body {
+            display: flex;
+            align-items: flex-start; /* Align content to the top */
+            box-sizing: border-box;
+          }
+          
           .search-container {
             display: flex;
             align-items: center;
-            padding: 4px 8px;
-            box-sizing: border-box;
-            height: 100%;
             width: 100%;
+            height: var(--input-height);
+            padding: 0 8px; /* Horizontal padding */
+            box-sizing: border-box;
           }
+
           .search-icon {
             width: 16px;
             height: 16px;
-            margin-right: 6px;
-            opacity: 0.6;
+            margin-right: 4px;
+            color: var(--vscode-icon-foreground);
             flex-shrink: 0;
           }
+
           .search-input {
             flex: 1;
             background: var(--vscode-input-background);
             color: var(--vscode-input-foreground);
-            border: 1px solid var(--vscode-input-border);
-            padding: 3px 8px;
+            border: 1px solid var(--vscode-input-border, transparent);
+            padding: 2px 4px;
             font-family: var(--vscode-font-family);
             font-size: var(--vscode-font-size);
             outline: none;
             border-radius: 2px;
+            height: 100%;
+            box-sizing: border-box;
           }
+
           .search-input:focus {
             border-color: var(--vscode-focusBorder);
           }
+
           .search-input::placeholder {
             color: var(--vscode-input-placeholderForeground);
           }
+          
           .clear-button {
             background: transparent;
             border: none;
@@ -115,6 +132,7 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--vscode-icon-foreground);
             opacity: 0.6;
             transition: opacity 0.2s;
           }
@@ -122,30 +140,30 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
             opacity: 1;
           }
           .clear-button.hidden {
-            display: none;
+            visibility: hidden; /* Use visibility to prevent layout shifts */
+            opacity: 0;
           }
           .clear-icon {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
           }
         </style>
       </head>
-      <body style="height: 32px; max-height: 32px;">
+      <body>
         <div class="search-container">
-          <svg class="search-icon" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M10.5 1a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM7 5.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
-            <path d="M5.077 9.457a5.465 5.465 0 0 0 1.466 1.466l-5.21 5.21a1 1 0 1 1-1.415-1.414l5.159-5.262z"/>
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+            <path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd"/>
           </svg>
           <input 
             type="text" 
             class="search-input" 
-            placeholder="Filter files (e.g., *.ts, test*, config.*)"
+            placeholder="Filter files..."
             id="searchInput"
           />
           <button class="clear-button hidden" id="clearButton" title="Clear search">
-            <svg class="clear-icon" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM3 8a5 5 0 1 1 10 0A5 5 0 0 1 3 8z"/>
-              <path d="M10.5 5.5L8 8l2.5 2.5-1 1L7 9 4.5 11.5l-1-1L6 8 3.5 5.5l1-1L7 7l2.5-2.5 1 1z"/>
+            <svg class="clear-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                <path fill-rule="evenodd" d="M7 3.5a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 7 3.5ZM6.5 8a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-.5-.5Zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-.5-.5Zm2 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-.5-.5Zm-5-3.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75Zm0 6.5a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd"/>
+                <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h2a.5.5 0 0 1 .5.5v1.857a.25.25 0 0 0 .25.25h1.5a.25.25 0 0 0 .25-.25V5.5a.5.5 0 0 0-1 0v1.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1.5a.25.25 0 0 0 .25-.25V3.5a.5.5 0 0 0-1 0V4H2.5a.5.5 0 0 1-.5-.5v-1A.5.5 0 0 1 2.5 2H4V1.5a.5.5 0 0 0-.5-.5H2Z"/>
             </svg>
           </button>
         </div>
@@ -160,11 +178,7 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
             const value = e.target.value;
             
             // Show/hide clear button
-            if (value) {
-              clearButton.classList.remove('hidden');
-            } else {
-              clearButton.classList.add('hidden');
-            }
+            clearButton.classList.toggle('hidden', !value);
 
             // Debounce search
             clearTimeout(debounceTimer);
@@ -188,20 +202,9 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
           });
 
           // Focus on load
-          searchInput.focus();
-          
-          // Notify VS Code about the preferred size
-          // This helps reduce unnecessary space
-          if (window.ResizeObserver) {
-            const resizeObserver = new ResizeObserver(() => {
-              const height = document.body.offsetHeight;
-              vscode.postMessage({
-                command: 'resize',
-                height: height
-              });
-            });
-            resizeObserver.observe(document.body);
-          }
+          window.addEventListener('load', () => {
+            searchInput.focus();
+          });
         </script>
       </body>
       </html>`;

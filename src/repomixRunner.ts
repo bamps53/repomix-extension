@@ -1,9 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as childProcess from 'child_process';
-import { promisify } from 'util';
-
-const exec = promisify(childProcess.exec);
 
 // Output Channel for repomix logs
 let outputChannel: vscode.OutputChannel | undefined;
@@ -62,17 +59,17 @@ export async function executeRepomix(options: RepomixOptions): Promise<RepomixRe
     // The files are already relative paths from extension.ts
     const includePatterns = options.files;
     
-    // Build the repomix command with include patterns
-    const includeArg = includePatterns.length > 0 
-      ? `--include "${includePatterns.join(',')}"` 
-      : '';
-    
-    // Always process the current directory (workspace root)
-    const command = `npx repomix ${includeArg} .`;
+    // Build the repomix command arguments
+    const args: string[] = ['repomix'];
+    if (includePatterns.length > 0) {
+      args.push('--include', includePatterns.join(','));
+    }
+    args.push('.');
     
     // Log command details
+    const commandDisplay = `npx ${args.join(' ')}`;
     outputChannel.appendLine('Command Details:');
-    outputChannel.appendLine(`  Command: ${command}`);
+    outputChannel.appendLine(`  Command: ${commandDisplay}`);
     outputChannel.appendLine(`  Working Directory: ${options.workspaceRoot}`);
     outputChannel.appendLine(`  Include Patterns: ${includePatterns.join(', ')}`);
     outputChannel.appendLine(`  Total Files: ${includePatterns.length}`);
@@ -80,22 +77,47 @@ export async function executeRepomix(options: RepomixOptions): Promise<RepomixRe
     outputChannel.appendLine('Execution Output:');
     outputChannel.appendLine('-'.repeat(40));
     
-    // Execute repomix CLI with selected files
-    const { stdout, stderr } = await exec(command, { 
-      cwd: options.workspaceRoot,
-      maxBuffer: 1024 * 1024 * 10 // 10MB buffer for large outputs
+    // Execute repomix using spawn which doesn't require a shell
+    const result = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+      const npxProcess = childProcess.spawn('npx', args, {
+        cwd: options.workspaceRoot,
+        env: process.env
+      });
+      
+      let stdout = '';
+      let stderr = '';
+      
+      npxProcess.stdout.on('data', (data) => {
+        const chunk = data.toString();
+        stdout += chunk;
+        outputChannel?.append(chunk);
+      });
+      
+      npxProcess.stderr.on('data', (data) => {
+        const chunk = data.toString();
+        stderr += chunk;
+      });
+      
+      npxProcess.on('error', (error) => {
+        reject(error);
+      });
+      
+      npxProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve({ stdout, stderr });
+        } else {
+          reject(new Error(`Process exited with code ${code}: ${stderr}`));
+        }
+      });
     });
     
-    // Log stdout
-    if (stdout) {
-      outputChannel.appendLine(stdout);
-    }
+    // Log stdout is already done in real-time above
     
     // Check for stderr warnings but don't fail on them
-    if (stderr && stderr.trim()) {
+    if (result.stderr && result.stderr.trim()) {
       outputChannel.appendLine('');
       outputChannel.appendLine('Warnings/Errors:');
-      outputChannel.appendLine(stderr);
+      outputChannel.appendLine(result.stderr);
     }
     
     const executionTime = Date.now() - startTime;
@@ -107,7 +129,7 @@ export async function executeRepomix(options: RepomixOptions): Promise<RepomixRe
     
     return {
       success: true,
-      output: stdout || 'Repomix executed successfully',
+      output: result.stdout || 'Repomix executed successfully',
       timestamp: new Date(),
       executionTimeMs: executionTime
     };

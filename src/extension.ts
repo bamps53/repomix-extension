@@ -47,24 +47,6 @@ export function activate(context: vscode.ExtensionContext) {
     showCollapseAll: true
   });
   
-  // Update title based on search state
-  const updateTreeTitle = () => {
-    const query = fileTreeProvider.getSearchQuery();
-    if (query) {
-      treeView.title = `File Tree (${query})`;
-    } else {
-      treeView.title = 'File Tree';
-    }
-  };
-  
-  // Set initial title
-  updateTreeTitle();
-  
-  // Update title when tree is updated
-  fileTreeProvider.onDidChangeTreeData(() => {
-    updateTreeTitle();
-  });
-  
   // Register profile manager view
   vscode.window.registerTreeDataProvider('repomixProfiles', profileManager);
 

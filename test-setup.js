@@ -90,7 +90,15 @@ const vscode = {
         showQuickPick: (items, options) => Promise.resolve(items[0]),
         registerTreeDataProvider: () => ({ dispose: () => {} }),
         createTreeView: () => ({ dispose: () => {} }),
-        showTextDocument: () => Promise.resolve()
+        showTextDocument: () => Promise.resolve(),
+        createOutputChannel: (name) => ({
+            appendLine: () => {},
+            append: () => {},
+            clear: () => {},
+            show: () => {},
+            hide: () => {},
+            dispose: () => {}
+        })
     },
     
     workspace: {
