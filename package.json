@@ -51,7 +51,7 @@
           "id": "repomixSearchWebview",
           "type": "webview",
           "name": "Search",
-          "visibility": "visible"
+          "visibility": "collapsed"
         },
         {
           "id": "repomixFileExplorer",
