@@ -10,11 +10,14 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private _extensionUri: vscode.Uri;
   private onSearchChangeCallback?: (query: string) => void;
+  private _cachedHtml?: string;
 
   constructor(
     private readonly context: vscode.ExtensionContext
   ) {
     this._extensionUri = context.extensionUri;
+    // Pre-generate HTML to reduce initial rendering time
+    this._cachedHtml = this._generateHtml();
   }
 
   /**
@@ -36,7 +39,10 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this._extensionUri]
     };
 
-    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+    // webview.options is read-only, so no need to reassign
+
+    // Use pre-cached HTML for instant display
+    webviewView.webview.html = this._cachedHtml || this._getHtmlForWebview(webviewView.webview);
 
     // Handle messages from the webview
     webviewView.webview.onDidReceiveMessage(message => {
@@ -50,16 +56,24 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
     });
   }
 
+  private _generateHtml(): string {
+    const nonce = getNonce();
+    return this._buildHtmlContent(nonce);
+  }
+
   private _getHtmlForWebview(webview: vscode.Webview) {
     const nonce = getNonce();
+    return this._buildHtmlContent(nonce);
+  }
 
+  private _buildHtmlContent(nonce: string): string {
     // The new HTML with improved CSS for minimizing vertical space
     return `<!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';">
         <title>Search Files</title>
         <style>
           /* Define height variables for easy adjustment */
@@ -201,10 +215,8 @@ export class SearchWebviewProvider implements vscode.WebviewViewProvider {
             searchInput.focus();
           });
 
-          // Focus on load
-          window.addEventListener('load', () => {
-            searchInput.focus();
-          });
+          // Focus immediately (no need to wait for load event)
+          searchInput.focus();
         </script>
       </body>
       </html>`;

@@ -33,11 +33,16 @@ export function activate(context: vscode.ExtensionContext) {
     fileTreeProvider.setSearchQuery(query);
   });
   
-  // Register search webview
+  // Register search webview with retention
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       SearchWebviewProvider.viewType,
-      searchWebviewProvider
+      searchWebviewProvider,
+      {
+        webviewOptions: {
+          retainContextWhenHidden: true
+        }
+      }
     )
   );
   
