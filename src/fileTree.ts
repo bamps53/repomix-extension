@@ -170,6 +170,8 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     // キャッシュを無効化
     this.cache.invalidateDirectory(element.resourceUri);
     this.cache.invalidateParentDirectories(element.resourceUri);
+    // 検索フィルタキャッシュもクリア
+    this.filteredFileCache.clear();
     
     // アイテムがディレクトリの場合、すべての子アイテムも更新
     if (element.type === vscode.FileType.Directory) {
@@ -334,6 +336,8 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
    */
   uncheckAll(): void {
     this.checkedItems.clear();
+    // 検索フィルタキャッシュもクリア
+    this.filteredFileCache.clear();
     this.updateView();
   }
 
@@ -418,6 +422,8 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
         // フィルタが適用されていない場合は、すべてのアイテムを選択
         await this.selectAllRecursive(vscode.Uri.file(this.workspaceRoot));
       }
+      // 検索フィルタキャッシュをクリア
+      this.filteredFileCache.clear();
       this.updateView();
     } catch (error) {
       console.error('Error selecting all items:', error);
@@ -650,6 +656,8 @@ export class FileTreeProvider implements vscode.TreeDataProvider<FileSystemItem>
     // キャッシュを無効化
     this.cache.invalidateDirectory(uri);
     this.cache.invalidateParentDirectories(uri);
+    // 検索フィルタキャッシュもクリア
+    this.filteredFileCache.clear();
     
     if (fireEvent) {
       // 選択状態をクリアせずにビューのみ更新
